@@ -1,0 +1,12 @@
+{
+  "stale": {
+    "model": "minecraft:item/stale/potato",
+    "start_threshold": 0.4,
+    "full_threshold": 0.7
+  },
+  "rotten": {
+    "model": "minecraft:item/rotten/potato",
+    "start_threshold": 0.7,
+    "full_threshold": 1.0
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "etherested.spoilage.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ItemStackMixin",
+    "FoodDataMixin",
+    "ContainerClickMixin",
+    "ResultSlotMixin",
+    "ResultSlotAccessor",
+    "ResultSlotOnTakeMixin",
+    "AbstractFurnaceBlockEntityMixin",
+    "ServerPlaceRecipeMixin",
+    "ComposterBlockMixin",
+    "InventoryMixin",
+    "VillagerMixin",
+    "AnimalMixin",
+    "BlockItemMixin",
+    "CakeBlockMixin",
+    "CropBlockMixin",
+    "MerchantOfferMixin",
+    "BlockPickMixin"
+  ],
+  "client": [
+    "ItemRendererMixin",
+    "EatingParticleMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

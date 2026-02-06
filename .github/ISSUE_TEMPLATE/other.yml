@@ -1,0 +1,25 @@
+name: "💬 other"
+description: "anything that doesn't fit the other categories"
+labels: ["other"]
+title: "💬 "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        doesn't fit anywhere else? no worries — describe it below
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "description"
+      description: "what's on your mind?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "additional context"
+      description: "screenshots, links, or any other info that might help"
+    validations:
+      required: false

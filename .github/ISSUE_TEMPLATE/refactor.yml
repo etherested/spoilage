@@ -1,0 +1,50 @@
+name: "♻️ refactor/improvement"
+description: "suggest a code refactor or internal improvement"
+labels: ["refactor"]
+title: "♻️ "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        spotted something that could be cleaner or more efficient? let me know
+
+  - type: textarea
+    id: area
+    attributes:
+      label: "affected area"
+      description: "which part of the codebase does this involve?"
+      placeholder: "e.g. spoilage system, mixin layer, tick scheduling"
+    validations:
+      required: true
+
+  - type: textarea
+    id: current
+    attributes:
+      label: "current behavior"
+      description: "how does the current implementation work and what's wrong with it?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed
+    attributes:
+      label: "proposed improvement"
+      description: "what would the improved version look like?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: "benefits"
+      description: "what does this improve? (readability, performance, maintainability, etc.)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "additional context"
+      description: "code snippets, benchmarks, or any other info that might help"
+    validations:
+      required: false

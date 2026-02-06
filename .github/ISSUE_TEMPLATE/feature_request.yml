@@ -1,0 +1,50 @@
+name: "🧩 feature request"
+description: "suggest a new feature or enhancement"
+labels: ["enhancement"]
+title: "🧩 "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        got an idea? i'd love to hear it — please describe it below
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "problem/motivation"
+      description: "what problem does this solve or what need does it address?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "proposed solution"
+      description: "describe the feature or behavior you'd like to see"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "alternatives considered"
+      description: "any alternative solutions or workarounds you've thought about?"
+    validations:
+      required: false
+
+  - type: input
+    id: minecraft-version
+    attributes:
+      label: "target minecraft version"
+      description: "which minecraft version should this target?"
+      placeholder: "e.g. 1.21.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "additional context"
+      description: "screenshots, mockups, references, or any other info that might help"
+    validations:
+      required: false

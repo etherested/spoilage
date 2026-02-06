@@ -1,0 +1,41 @@
+name: "📝 documentation"
+description: "report missing, incorrect, or unclear documentation"
+labels: ["documentation"]
+title: "📝 "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        help me keep the docs accurate and useful — describe the issue below
+
+  - type: textarea
+    id: area
+    attributes:
+      label: "affected documentation"
+      description: "which docs are affected? (README, wiki, javadocs, config comments, etc.)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: "what's wrong"
+      description: "is it missing, outdated, incorrect, or unclear?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: "suggested fix"
+      description: "how should it be corrected or improved?"
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "additional context"
+      description: "links, screenshots, or any other info that might help"
+    validations:
+      required: false

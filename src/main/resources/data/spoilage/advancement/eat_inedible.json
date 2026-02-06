@@ -1,0 +1,23 @@
+{
+  "parent": "minecraft:husbandry/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:rotten_flesh"
+    },
+    "title": {
+      "translate": "advancement.spoilage.eat_inedible.title"
+    },
+    "description": {
+      "translate": "advancement.spoilage.eat_inedible.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "eat_inedible": {
+      "trigger": "spoilage:eat_inedible"
+    }
+  }
+}

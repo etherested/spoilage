@@ -1,0 +1,16 @@
+{
+  "rotten_block": {
+    "model": "minecraft:block/rotten/cake",
+    "start_threshold": 0.4,
+    "full_threshold": 1.0,
+    "model_by_state": {
+      "bites=0": "minecraft:block/rotten/cake",
+      "bites=1": "minecraft:block/rotten/cake_slice1",
+      "bites=2": "minecraft:block/rotten/cake_slice2",
+      "bites=3": "minecraft:block/rotten/cake_slice3",
+      "bites=4": "minecraft:block/rotten/cake_slice4",
+      "bites=5": "minecraft:block/rotten/cake_slice5",
+      "bites=6": "minecraft:block/rotten/cake_slice6"
+    }
+  }
+}

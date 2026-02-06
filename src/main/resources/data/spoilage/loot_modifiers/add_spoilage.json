@@ -1,0 +1,6 @@
+{
+  "type": "spoilage:add_spoilage",
+  "conditions": [],
+  "min_spoilage": 0.0,
+  "max_spoilage": 0.5
+}

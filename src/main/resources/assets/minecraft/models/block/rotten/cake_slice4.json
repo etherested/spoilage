@@ -1,0 +1,22 @@
+{
+  "textures": {
+    "particle": "minecraft:block/rotten/cake_side",
+    "bottom": "minecraft:block/rotten/cake_bottom",
+    "top": "minecraft:block/rotten/cake_top",
+    "side": "minecraft:block/rotten/cake_side",
+    "inside": "minecraft:block/rotten/cake_inner"
+  },
+  "elements": [
+    {   "from": [ 9, 0, 1 ],
+      "to": [ 15, 8, 15 ],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top" },
+        "north": { "texture": "#side" },
+        "south": { "texture": "#side" },
+        "west":  { "texture": "#inside" },
+        "east":  { "texture": "#side" }
+      }
+    }
+  ]
+}
