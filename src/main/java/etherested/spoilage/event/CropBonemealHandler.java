@@ -15,17 +15,18 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.BonemealEvent;
 
 /**
- * handles bone meal usage on crops to reset rot timer;
- * when BONEMEAL_RESETS_ROT is enabled and bone meal is used on a rotting crop,
- * the fullyGrownTime is reset to the current time, restarting the fresh period;
- * this allows players to save crops that have started to rot
+ * handles bone meal usage on crops that are rotting;
+ * when BONEMEAL_RESETS_ROT is enabled and the crop hasn't fully rotted,
+ * bone meal resets the fullyGrownTime to restart the fresh period;
+ * when BONEMEAL_BLOCKED_ON_ROTTEN is enabled, bone meal has no effect
+ * on any crop that has started rotting (prevents vanilla stage growth)
  */
 @EventBusSubscriber(modid = Spoilage.MODID)
 public class CropBonemealHandler {
 
     @SubscribeEvent
     public static void onBonemeal(BonemealEvent event) {
-        if (!SpoilageConfig.isEnabled() || !SpoilageConfig.doesBonemealResetRot()) {
+        if (!SpoilageConfig.isEnabled()) {
             return;
         }
 
@@ -42,7 +43,7 @@ public class CropBonemealHandler {
             return;
         }
 
-        // check if this crop has spoilage data and is fully grown (rotting)
+        // check if this crop has spoilage data and is fully grown
         ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);
         if (entry == null || !entry.isFullyGrown()) {
             return;
@@ -54,21 +55,26 @@ public class CropBonemealHandler {
         long rotPeriod = SpoilageConfig.getCropRotPeriodTicks();
         float rotProgress = entry.getRotProgress(worldTime, freshPeriod, rotPeriod);
 
-        if (rotProgress > 0) {
-            // reset the fully grown time to restart fresh period
+        if (rotProgress <= 0) {
+            return;
+        }
+
+        // crop is rotting — try to reset rot if enabled and not fully rotten
+        if (rotProgress < 1.0f && SpoilageConfig.doesBonemealResetRot()) {
             ChunkSpoilageCapability.resetCropFullyGrownTime(level, pos);
 
-            // consume the bone meal item
             event.getStack().shrink(1);
-
-            // mark as successful to trigger particles/sound
             event.setSuccessful(true);
 
-            // sync the updated state to clients (rot tint should disappear)
             if (level instanceof ServerLevel serverLevel) {
-                // after reset, rot progress is 0, so sync 0 spoilage
                 BlockSpoilageNetworkHandler.syncSingleBlock(serverLevel, pos, 0.0f);
             }
+            return;
+        }
+
+        // block bone meal on rotten crops to prevent vanilla stage growth
+        if (SpoilageConfig.isBonemealBlockedOnRotten()) {
+            event.setSuccessful(false);
         }
     }
 }

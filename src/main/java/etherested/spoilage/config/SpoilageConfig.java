@@ -60,6 +60,7 @@ public class SpoilageConfig {
     public static final ModConfigSpec.IntValue CROP_ROT_PERIOD_TICKS;
     public static final ModConfigSpec.IntValue CROP_MINIMUM_HARVEST_STAGE;
     public static final ModConfigSpec.BooleanValue BONEMEAL_RESETS_ROT;
+    public static final ModConfigSpec.BooleanValue BONEMEAL_BLOCKED_ON_ROTTEN;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -206,6 +207,12 @@ public class SpoilageConfig {
                 .comment("When bonemeal is used on a rotting crop, reset the fresh timer",
                         "This allows players to save crops that have started to rot")
                 .define("bonemealResetsRot", true);
+
+        BONEMEAL_BLOCKED_ON_ROTTEN = builder
+                .comment("Block bone meal from having any effect on rotten crops",
+                        "When enabled, bone meal cannot grow or reset crops that are currently rotting",
+                        "When disabled, vanilla bone meal can still grow stages on rotten crops")
+                .define("bonemealBlockedOnRotten", true);
 
         builder.pop();
 
@@ -397,5 +404,9 @@ public class SpoilageConfig {
 
     public static boolean doesBonemealResetRot() {
         return BONEMEAL_RESETS_ROT.get();
+    }
+
+    public static boolean isBonemealBlockedOnRotten() {
+        return BONEMEAL_BLOCKED_ON_ROTTEN.get();
     }
 }

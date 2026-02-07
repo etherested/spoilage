@@ -130,5 +130,7 @@
   "spoilage.configuration.cropMinimumHarvestStage": "Minimum Harvest Stage",
   "spoilage.configuration.cropMinimumHarvestStage.tooltip": "Crops at or below this growth stage are inedible when harvested",
   "spoilage.configuration.bonemealResetsRot": "Bonemeal Resets Rot",
-  "spoilage.configuration.bonemealResetsRot.tooltip": "Using bonemeal on rotting crops restarts their fresh period"
+  "spoilage.configuration.bonemealResetsRot.tooltip": "Using bonemeal on rotting crops restarts their fresh period",
+  "spoilage.configuration.bonemealBlockedOnRotten": "Bonemeal Blocked on Rotten",
+  "spoilage.configuration.bonemealBlockedOnRotten.tooltip": "Bone meal has no effect on crops that are currently rotting"
 }
