@@ -24,7 +24,8 @@
   ],
   "client": [
     "ItemRendererMixin",
-    "EatingParticleMixin"
+    "EatingParticleMixin",
+    "TerrainParticleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
