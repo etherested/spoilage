@@ -15,7 +15,8 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.BonemealEvent;
 
 /**
- * handles bone meal usage on crops that are rotting;
+ * handles bone meal usage on crops with spoilage;
+ * blocks bone meal on crops still recovering from seed spoilage;
  * when BONEMEAL_RESETS_ROT is enabled and the crop hasn't fully rotted,
  * bone meal resets the fullyGrownTime to restart the fresh period;
  * when BONEMEAL_BLOCKED_ON_ROTTEN is enabled, bone meal has no effect
@@ -43,9 +44,25 @@ public class CropBonemealHandler {
             return;
         }
 
-        // check if this crop has spoilage data and is fully grown
         ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);
-        if (entry == null || !entry.isFullyGrown()) {
+        if (entry == null) {
+            return;
+        }
+
+        // block bone meal on crops that are still recovering from seed spoilage
+        if (!entry.isFullyGrown() && entry.initialSpoilage() > 0
+                && SpoilageConfig.isStaleSeedGrowthPenaltyEnabled()) {
+            long worldTime = level.getGameTime();
+            long recoveryPeriod = SpoilageConfig.getStaleSeedRecoveryTicks();
+            float recovering = entry.getRecoveringSpoilage(worldTime, recoveryPeriod);
+            if (recovering > 0) {
+                event.setSuccessful(false);
+                return;
+            }
+        }
+
+        // check if this crop is fully grown (for rot reset / bone meal blocking)
+        if (!entry.isFullyGrown()) {
             return;
         }
 

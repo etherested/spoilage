@@ -19,7 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * mixin to handle crop lifecycle with the spoilage system;
- *   - growing phase: crops grow normally, seed spoilage is ignored
+ *   - recovery phase: stale seeds freeze growth until freshness fully recovers
+ *   - growing phase: after recovery (or if seed is fresh), crops grow normally
  *   - fresh period: fully grown crops stay 100% fresh for configurable duration
  *   - rotting phase: after fresh period, crops slowly rot and regress through growth stages
  *   - inedible: at minimum stage, crops become inedible when harvested
@@ -64,6 +65,35 @@ public abstract class CropBlockMixin {
         }
     }
 
+    /**
+     * freezes crop growth while the seed's spoilage is still recovering;
+     * when recovery completes, clears initialSpoilage and lets the tick proceed
+     */
+    @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
+    private void spoilage$freezeRecoveringCrop(BlockState state, ServerLevel level, BlockPos pos,
+                                                RandomSource random, CallbackInfo ci) {
+        if (!SpoilageConfig.isEnabled() || !SpoilageConfig.isStaleSeedGrowthPenaltyEnabled()) {
+            return;
+        }
+
+        ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);
+        if (entry == null || entry.type() != ChunkSpoilageData.BlockType.CROP || entry.initialSpoilage() <= 0) {
+            return;
+        }
+
+        long worldTime = level.getGameTime();
+        long recoveryPeriod = SpoilageConfig.getStaleSeedRecoveryTicks();
+        float recovering = entry.getRecoveringSpoilage(worldTime, recoveryPeriod);
+
+        if (recovering > 0) {
+            // still recovering — block vanilla growth
+            ci.cancel();
+        } else {
+            // recovery complete — clear initialSpoilage so this check won't fire again
+            ChunkSpoilageCapability.updateCropSpoilage(level, pos, 0.0f);
+        }
+    }
+
     /** handles crop growth and rotting lifecycle */
     @Inject(method = "randomTick", at = @At("RETURN"))
     private void spoilage$onCropRandomTick(BlockState state, ServerLevel level, BlockPos pos,
@@ -79,10 +109,7 @@ public abstract class CropBlockMixin {
         spoilage$handleCropLifecycle(currentState, level, pos);
     }
 
-    /**
-     * crops stay fresh when fully grown, then rot and regress;
-     * while growing, seed spoilage decreases proportionally until 0% at maturity
-     */
+    /** crops stay fresh when fully grown, then rot and regress through growth stages */
     @Unique
     private void spoilage$handleCropLifecycle(BlockState state, ServerLevel level, BlockPos pos) {
         ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);
@@ -137,16 +164,6 @@ public abstract class CropBlockMixin {
                 if (targetAge < currentAge) {
                     level.setBlock(pos, getStateForAge(targetAge), Block.UPDATE_ALL);
                 }
-            }
-        } else if (entry != null && entry.initialSpoilage() > 0) {
-            // crop is still growing and has seed spoilage, decrease it as crop grows
-            // at age 0: full seed spoilage, at max age: 0% spoilage
-            float growthProgress = (float) currentAge / maxAge;
-            float currentSpoilage = entry.initialSpoilage() * (1.0f - growthProgress);
-
-            // update stored spoilage if it changed significantly
-            if (Math.abs(currentSpoilage - entry.initialSpoilage()) > 0.01f) {
-                ChunkSpoilageCapability.updateCropSpoilage(level, pos, currentSpoilage);
             }
         }
         // if entry is null, the crop is still growing naturally

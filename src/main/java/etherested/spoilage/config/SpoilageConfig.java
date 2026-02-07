@@ -66,6 +66,8 @@ public class SpoilageConfig {
     public static final ModConfigSpec.IntValue CROP_MINIMUM_HARVEST_STAGE;
     public static final ModConfigSpec.BooleanValue BONEMEAL_RESETS_ROT;
     public static final ModConfigSpec.BooleanValue BONEMEAL_BLOCKED_ON_ROTTEN;
+    public static final ModConfigSpec.BooleanValue STALE_SEED_GROWTH_PENALTY;
+    public static final ModConfigSpec.IntValue STALE_SEED_RECOVERY_TICKS;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -230,6 +232,16 @@ public class SpoilageConfig {
                         "When enabled, bone meal cannot grow or reset crops that are currently rotting",
                         "When disabled, vanilla bone meal can still grow stages on rotten crops")
                 .define("bonemealBlockedOnRotten", true);
+
+        STALE_SEED_GROWTH_PENALTY = builder
+                .comment("Crops planted from stale seeds freeze at their current growth stage",
+                        "until the seed's freshness fully recovers to 0% spoilage")
+                .define("staleSeedGrowthPenalty", true);
+
+        STALE_SEED_RECOVERY_TICKS = builder
+                .comment("Ticks for a 100% spoiled seed to fully recover (proportional for partial spoilage)",
+                        "Default: 48000 (2 Minecraft days for full recovery)")
+                .defineInRange("staleSeedRecoveryTicks", 48000, 1, 1728000);
 
         builder.pop();
 
@@ -437,5 +449,13 @@ public class SpoilageConfig {
 
     public static boolean isBonemealBlockedOnRotten() {
         return BONEMEAL_BLOCKED_ON_ROTTEN.get();
+    }
+
+    public static boolean isStaleSeedGrowthPenaltyEnabled() {
+        return STALE_SEED_GROWTH_PENALTY.get();
+    }
+
+    public static int getStaleSeedRecoveryTicks() {
+        return STALE_SEED_RECOVERY_TICKS.get();
     }
 }

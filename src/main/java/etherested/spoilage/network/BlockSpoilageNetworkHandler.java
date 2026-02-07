@@ -100,8 +100,19 @@ public class BlockSpoilageNetworkHandler {
             ChunkSpoilageData.BlockSpoilageEntry spoilageEntry = entry.getValue();
             ChunkSpoilageData.BlockType type = spoilageEntry.type();
 
-            // skip growing crops (they don't need visual sync)
+            // sync recovering crops for visual tint feedback
             if (type == ChunkSpoilageData.BlockType.CROP) {
+                if (SpoilageConfig.isStaleSeedGrowthPenaltyEnabled() && spoilageEntry.initialSpoilage() > 0) {
+                    long recoveryPeriod = SpoilageConfig.getStaleSeedRecoveryTicks();
+                    float recovering = spoilageEntry.getRecoveringSpoilage(worldTime, recoveryPeriod);
+                    if (recovering > 0.05f) {
+                        BlockState cropState = serverLevel.getBlockState(pos);
+                        if (!cropState.isAir() && cropState.getBlock() instanceof CropBlock) {
+                            ChunkPos chunkPos = new ChunkPos(pos);
+                            chunkUpdates.computeIfAbsent(chunkPos, k -> new HashMap<>()).put(pos, recovering);
+                        }
+                    }
+                }
                 continue;
             }
 
@@ -233,8 +244,18 @@ public class BlockSpoilageNetworkHandler {
             ChunkSpoilageData.BlockSpoilageEntry spoilageEntry = entry.getValue();
             ChunkSpoilageData.BlockType type = spoilageEntry.type();
 
-            // skip growing crops (they don't need visual sync)
+            // sync recovering crops for visual tint feedback
             if (type == ChunkSpoilageData.BlockType.CROP) {
+                if (SpoilageConfig.isStaleSeedGrowthPenaltyEnabled() && spoilageEntry.initialSpoilage() > 0) {
+                    long recoveryPeriod = SpoilageConfig.getStaleSeedRecoveryTicks();
+                    float recovering = spoilageEntry.getRecoveringSpoilage(worldTime, recoveryPeriod);
+                    if (recovering > 0.05f) {
+                        BlockState cropState = level.getBlockState(pos);
+                        if (!cropState.isAir() && cropState.getBlock() instanceof CropBlock) {
+                            result.put(pos, recovering);
+                        }
+                    }
+                }
                 continue;
             }
 

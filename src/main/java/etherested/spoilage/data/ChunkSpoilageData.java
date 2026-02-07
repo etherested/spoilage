@@ -146,6 +146,13 @@ public class ChunkSpoilageData extends SavedData {
             return new BlockSpoilageEntry(worldTime, seedSpoilage, false, BlockType.CROP, -1L);
         }
 
+        /** calculates current recovering spoilage for a growing crop with seed spoilage */
+        public float getRecoveringSpoilage(long worldTime, long recoveryPeriod) {
+            if (initialSpoilage <= 0) return 0.0f;
+            long elapsed = worldTime - creationTime;
+            return Math.max(0.0f, initialSpoilage - (float) elapsed / recoveryPeriod);
+        }
+
         /** calculates current spoilage percentage based on elapsed time */
         public float getSpoilage(long worldTime, long lifetime) {
             if (isPaused) {

@@ -35,13 +35,14 @@ all preservation factors stack multiplicatively and tooltips display active bonu
 
 ### 🌾 crop lifecycle
 
-crops follow a three-phase lifecycle
+crops follow a four-phase lifecycle
 
-1. **growing** — planted seeds grow normally through vanilla growth stages
-2. **fresh period** — fully grown crops remain at 100% freshness for a configurable duration (default 3 in-game days)
-3. **rotting** — after the fresh period, crops gradually rot and visually regress through growth stages until inedible
+1. **recovery** — seeds planted with spoilage freeze at their current growth stage while freshness recovers over time
+2. **growing** — once recovery completes (or if the seed was fresh), crops grow normally through vanilla growth stages
+3. **fresh period** — fully grown crops remain at 100% freshness for a configurable duration (default 3 in-game days)
+4. **rotting** — after the fresh period, crops gradually rot and visually regress through growth stages until inedible
 
-applying bonemeal to a rotting crop resets its fresh timer (configurable)
+applying bonemeal to a rotting crop resets its fresh timer (configurable); bone meal has no effect on crops that are still recovering from seed spoilage
 
 ### 🔥 crafting and cooking
 
@@ -152,6 +153,8 @@ all settings live in `spoilage.toml` and there's also an in-game config screen
 | `cropRotPeriodTicks`      | `48000` | how long it takes crops to fully rot (~2 days)        |
 | `cropMinimumHarvestStage` | `1`     | growth stage at/below which crops are inedible        |
 | `bonemealResetsRot`       | `true`  | bonemeal restarts the fresh timer on rotting crops    |
+| `staleSeedGrowthPenalty`  | `true`  | stale seeds freeze crop growth until freshness recovers |
+| `staleSeedRecoveryTicks`  | `48000` | ticks for full 100%→0% recovery (~2 Minecraft days)   |
 
 ### 💬 tooltips
 
@@ -191,6 +194,9 @@ the result inherits a weighted average of all ingredient spoilage levels — ful
 
 - **can i change how fast food spoils?**
 use `globalSpeedMultiplier` to scale all spoilage speeds — individual items can have lifetime overrides in their datapack definitions
+
+- **do stale seeds affect crop growth?**
+yes — crops planted from stale seeds freeze at their current growth stage until the seed's freshness fully recovers, and bone meal has no effect during recovery
 
 - **do crops rot on the vine?**
 yes — fully grown crops have a fresh period, after which they gradually rot and regress through growth stages, and bonemeal can reset the timer
