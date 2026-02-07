@@ -52,6 +52,11 @@ public class SpoilageConfig {
     public static final ModConfigSpec.BooleanValue PREVENT_PLANTING_SPOILED;
     public static final ModConfigSpec.BooleanValue LOOT_RANDOMIZATION_ENABLED;
 
+    // food contamination settings
+    public static final ModConfigSpec.BooleanValue CONTAMINATION_ENABLED;
+    public static final ModConfigSpec.DoubleValue CONTAMINATION_MULTIPLIER_PER_SLOT;
+    public static final ModConfigSpec.DoubleValue CONTAMINATION_MAX_MULTIPLIER;
+
     // container settings
     public static final ModConfigSpec.ConfigValue<List<? extends String>> CONTAINER_SPOILAGE_RATES;
 
@@ -169,6 +174,18 @@ public class SpoilageConfig {
         LOOT_RANDOMIZATION_ENABLED = builder
                 .comment("Enable per-item freshness randomization in loot tables")
                 .define("lootRandomizationEnabled", true);
+
+        CONTAMINATION_ENABLED = builder
+                .comment("Rotten food accelerates spoilage of nearby fresh food in the same inventory")
+                .define("contaminationEnabled", true);
+
+        CONTAMINATION_MULTIPLIER_PER_SLOT = builder
+                .comment("Spoilage speed increase per rotten slot (0.15 = +15% faster per slot)")
+                .defineInRange("contaminationMultiplierPerSlot", 0.15, 0.01, 1.0);
+
+        CONTAMINATION_MAX_MULTIPLIER = builder
+                .comment("Maximum spoilage speed multiplier from food contamination")
+                .defineInRange("contaminationMaxMultiplier", 3.0, 1.0, 10.0);
 
         CONTAINER_SPOILAGE_RATES = builder
                 .comment("Container spoilage rate multipliers. Format: \"namespace:container;multiplier\"",
@@ -348,6 +365,18 @@ public class SpoilageConfig {
 
     public static boolean isLootRandomizationEnabled() {
         return LOOT_RANDOMIZATION_ENABLED.get();
+    }
+
+    public static boolean isContaminationEnabled() {
+        return CONTAMINATION_ENABLED.get();
+    }
+
+    public static float getContaminationMultiplierPerSlot() {
+        return CONTAMINATION_MULTIPLIER_PER_SLOT.get().floatValue();
+    }
+
+    public static float getContaminationMaxMultiplier() {
+        return CONTAMINATION_MAX_MULTIPLIER.get().floatValue();
     }
 
     // container getters

@@ -7,6 +7,7 @@ import etherested.spoilage.data.SpoilableItemData;
 import etherested.spoilage.data.SpoilageGroupData;
 import etherested.spoilage.data.SpoilageGroupRegistry;
 import etherested.spoilage.data.SpoilageItemRegistry;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -235,6 +236,30 @@ public class SpoilageCalculator {
 
         float avgSpoilage = calculateWeightedAverageSpoilage(ingredients, worldTime);
         initializeSpoilageWithPercent(result, worldTime, avgSpoilage);
+    }
+
+    /** counts inventory slots containing rotten food (80%+ spoilage) */
+    public static int countRottenSlots(Container container, long worldTime) {
+        int count = 0;
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack stack = container.getItem(i);
+            if (!stack.isEmpty() && isSpoilable(stack)) {
+                float spoilage = getSpoilagePercent(stack, worldTime);
+                if (spoilage >= 0.8f) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    /** calculates food contamination multiplier from rotten slot count */
+    public static float getContaminationMultiplier(int rottenSlots) {
+        if (!SpoilageConfig.isContaminationEnabled() || rottenSlots <= 0) {
+            return 1.0f;
+        }
+        float multiplier = 1.0f + (rottenSlots * SpoilageConfig.getContaminationMultiplierPerSlot());
+        return Math.min(multiplier, SpoilageConfig.getContaminationMaxMultiplier());
     }
 
     /** calculates weighted average spoilage when merging two stacks */

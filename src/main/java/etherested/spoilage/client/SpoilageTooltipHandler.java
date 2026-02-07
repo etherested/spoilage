@@ -150,7 +150,13 @@ public class SpoilageTooltipHandler {
                 }
             }
         }
-        // if not in container, show base remaining time (no preservation bonus applied)
+
+        // factor in food contamination acceleration
+        int rottenSlots = countRottenSlotsInCurrentContext(stack);
+        float rottenMultiplier = SpoilageCalculator.getContaminationMultiplier(rottenSlots);
+        if (rottenMultiplier > 1.0f) {
+            remainingTicks = (long) (remainingTicks / rottenMultiplier);
+        }
 
         return remainingTicks;
     }
@@ -207,6 +213,15 @@ public class SpoilageTooltipHandler {
                             .withStyle(ChatFormatting.RED));
                 }
             }
+        }
+
+        // food contamination penalty — applies in both containers and player inventory
+        int rottenSlots = countRottenSlotsInCurrentContext(event.getItemStack());
+        float contaminationMultiplier = SpoilageCalculator.getContaminationMultiplier(rottenSlots);
+        if (contaminationMultiplier > 1.0f && spoilage < 0.8f) {
+            int penaltyPercent = Math.round((contaminationMultiplier - 1.0f) * 100);
+            preservationLines.add(Component.translatable("tooltip.spoilage.contamination", penaltyPercent)
+                    .withStyle(ChatFormatting.RED));
         }
 
         // add preservation section if there are any effects
@@ -303,6 +318,41 @@ public class SpoilageTooltipHandler {
         }
 
         return null;
+    }
+
+    /**
+     * counts rotten slots in the current screen context;
+     * for container screens: counts from container slots;
+     * for inventory screen or items in player inventory: counts from player inventory
+     */
+    private static int countRottenSlotsInCurrentContext(ItemStack stack) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) return 0;
+
+        long worldTime = mc.level.getGameTime();
+
+        if (mc.screen instanceof AbstractContainerScreen<?> containerScreen && !(containerScreen instanceof InventoryScreen)) {
+            // in a container screen — check if item is in container portion or player inventory portion
+            if (isItemInOpenContainer(stack)) {
+                // item is in container slots — count rotten from container slots
+                AbstractContainerMenu menu = containerScreen.getMenu();
+                int containerSlotCount = getContainerSlotCount(menu);
+                int count = 0;
+                for (int i = 0; i < containerSlotCount && i < menu.slots.size(); i++) {
+                    ItemStack slotStack = menu.slots.get(i).getItem();
+                    if (!slotStack.isEmpty() && SpoilageCalculator.isSpoilable(slotStack)) {
+                        float spoilage = SpoilageCalculator.getSpoilagePercent(slotStack, worldTime);
+                        if (spoilage >= 0.8f) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            }
+        }
+
+        // item is in player inventory (either in InventoryScreen or player inventory portion of container)
+        return SpoilageCalculator.countRottenSlots(mc.player.getInventory(), worldTime);
     }
 
     /**

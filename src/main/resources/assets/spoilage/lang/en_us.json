@@ -13,6 +13,7 @@
   "tooltip.spoilage.depth_preservation": " +%d%% Depth",
   "tooltip.spoilage.cold_biome": " +%d%% Cold Biome",
   "tooltip.spoilage.hot_biome": " -%d%% Hot Biome",
+  "tooltip.spoilage.contamination": " -%d%% Contamination",
 
   "message.spoilage.rotten_ingredient": "Cannot craft with rotten ingredients!",
   "message.spoilage.cannot_plant_spoiled": "Cannot plant spoiled seeds!",
@@ -118,6 +119,12 @@
   "spoilage.configuration.preventPlantingSpoiled.tooltip": "Cannot plant spoiled seeds or saplings",
   "spoilage.configuration.lootRandomizationEnabled": "Loot Randomization",
   "spoilage.configuration.lootRandomizationEnabled.tooltip": "Each item in loot tables gets separate random freshness",
+  "spoilage.configuration.contaminationEnabled": "Food Contamination",
+  "spoilage.configuration.contaminationEnabled.tooltip": "Rotten food accelerates spoilage of nearby fresh food in the same inventory",
+  "spoilage.configuration.contaminationMultiplierPerSlot": "Contamination Multiplier Per Slot",
+  "spoilage.configuration.contaminationMultiplierPerSlot.tooltip": "Speed increase per rotten slot (0.15 = +15% faster per slot)",
+  "spoilage.configuration.contaminationMaxMultiplier": "Contamination Max Multiplier",
+  "spoilage.configuration.contaminationMaxMultiplier.tooltip": "Maximum spoilage speed multiplier from food contamination",
 
   "spoilage.configuration.crops": "Crop Settings",
   "spoilage.configuration.crops.button": "Crops",

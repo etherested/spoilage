@@ -138,7 +138,7 @@ public class PreservationManager {
             }
         }
 
-        return new PreservationInfo(yLevel, biome, container);
+        return new PreservationInfo(yLevel, biome, container, 1.0f);
     }
 
     /**
@@ -164,14 +164,19 @@ public class PreservationManager {
     public record PreservationInfo(
             float yLevelMultiplier,
             float biomeMultiplier,
-            float containerMultiplier
+            float containerMultiplier,
+            float contaminationMultiplier
     ) {
         public float getCombinedMultiplier() {
-            return yLevelMultiplier * biomeMultiplier * containerMultiplier;
+            return yLevelMultiplier * biomeMultiplier * containerMultiplier * contaminationMultiplier;
         }
 
         public PreservationInfo withContainer(float container) {
-            return new PreservationInfo(yLevelMultiplier, biomeMultiplier, container);
+            return new PreservationInfo(yLevelMultiplier, biomeMultiplier, container, contaminationMultiplier);
+        }
+
+        public PreservationInfo withContamination(float contamination) {
+            return new PreservationInfo(yLevelMultiplier, biomeMultiplier, containerMultiplier, contamination);
         }
 
         public boolean hasYLevelBonus() {
@@ -190,6 +195,10 @@ public class PreservationManager {
             return containerMultiplier < 1.0f;
         }
 
+        public boolean hasContaminationPenalty() {
+            return contaminationMultiplier > 1.0f;
+        }
+
         public int getYLevelBonusPercent() {
             return Math.round((1.0f - yLevelMultiplier) * 100);
         }
@@ -204,6 +213,10 @@ public class PreservationManager {
 
         public int getContainerBonusPercent() {
             return Math.round((1.0f - containerMultiplier) * 100);
+        }
+
+        public int getContaminationPenaltyPercent() {
+            return Math.round((contaminationMultiplier - 1.0f) * 100);
         }
     }
 }

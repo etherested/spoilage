@@ -26,7 +26,30 @@ public class SpoilageProcessor {
         long worldTime = level.getGameTime();
         Inventory inventory = player.getInventory();
 
-        processContainer(inventory, worldTime, level);
+        // count rotten slots for contamination penalty
+        int rottenSlots = SpoilageCalculator.countRottenSlots(inventory, worldTime);
+        float contaminationMultiplier = SpoilageCalculator.getContaminationMultiplier(rottenSlots);
+
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.isEmpty() || !SpoilageCalculator.isSpoilable(stack)) {
+                continue;
+            }
+
+            clearContainerYMultiplierIfNeeded(stack, worldTime);
+
+            // apply contamination acceleration via negative savings
+            if (contaminationMultiplier > 1.0f) {
+                applyContaminationPenalty(stack, contaminationMultiplier, worldTime);
+            }
+
+            processStack(stack, worldTime, level);
+
+            ItemStack replacement = checkRottenReplacement(stack, worldTime);
+            if (replacement != null) {
+                inventory.setItem(i, replacement);
+            }
+        }
     }
 
     /** process spoilage for a container (inventory, chest, etc.) */
@@ -71,6 +94,31 @@ public class SpoilageProcessor {
             // item has left the container - reset multiplier immediately
             stack.set(ModDataComponents.SPOILAGE_DATA.get(), data.clearContainerYMultiplier());
         }
+    }
+
+    /**
+     * applies food contamination penalty as negative savings;
+     * skips items already at rotten/inedible tier (80%+ spoilage)
+     */
+    private static void applyContaminationPenalty(ItemStack stack, float rottenMultiplier, long worldTime) {
+        SpoilageData data = SpoilageCalculator.getInitializedData(stack);
+        if (data == null || data.isPaused()) return;
+
+        // skip items already at rotten/inedible tier
+        float spoilage = SpoilageCalculator.getSpoilagePercent(stack, worldTime);
+        if (spoilage >= 0.8f) return;
+
+        // negative savings = checkInterval * (1.0 - multiplier) where multiplier > 1.0
+        long negativeSavings = (long) (SpoilageConfig.getCheckIntervalTicks() * (1.0f - rottenMultiplier));
+
+        stack.set(ModDataComponents.SPOILAGE_DATA.get(), new SpoilageData(
+                data.creationTime(), data.remainingLifetime(), data.isPaused(),
+                data.preservationMultiplier(),
+                data.yLevelSavedTicks() + negativeSavings,
+                data.lastYLevelProcessTick(),
+                data.currentContainerYMultiplier(),
+                data.biomeMultiplier()
+        ));
     }
 
     /**

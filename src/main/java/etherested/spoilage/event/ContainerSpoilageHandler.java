@@ -86,6 +86,12 @@ public class ContainerSpoilageHandler {
     private static void processContainerWithPreservation(Container container, BlockEntity blockEntity, BlockPos pos, long worldTime, Level level) {
         // get preservation info from the manager (includes Y-level, biome, and container factors)
         PreservationManager.PreservationInfo info = PreservationManager.getContainerPreservationInfo(level, pos, blockEntity);
+
+        // count rotten slots and apply contamination penalty
+        int rottenSlots = SpoilageCalculator.countRottenSlots(container, worldTime);
+        float contaminationMultiplier = SpoilageCalculator.getContaminationMultiplier(rottenSlots);
+        info = info.withContamination(contaminationMultiplier);
+
         float combinedMultiplier = info.getCombinedMultiplier();
 
         for (int i = 0; i < container.getContainerSize(); i++) {
@@ -136,8 +142,8 @@ public class ContainerSpoilageHandler {
             return;
         }
 
-        // if combinedMultiplier is 1.0, no preservation effect - just update the multipliers for display
-        if (combinedMultiplier >= 1.0f) {
+        // if combinedMultiplier is effectively 1.0, no effect in either direction - just update the multipliers for display
+        if (Math.abs(combinedMultiplier - 1.0f) < 0.001f) {
             stack.set(ModDataComponents.SPOILAGE_DATA.get(),
                     data.withContainerPreservation(combinedMultiplier, info.biomeMultiplier(), worldTime));
             return;

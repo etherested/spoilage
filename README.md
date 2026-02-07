@@ -29,8 +29,9 @@ multiple environmental factors combine to slow (or speed up) spoilage
 - **depth (Y-level)** — storing food deeper underground slows spoilage, with three configurable tiers (deep, underground, shallow) each giving increasing preservation bonuses
 - **biome temperature** — cold biomes slow spoilage, hot biomes speed it up, with fully configurable thresholds and multipliers
 - **containers** — specific containers (chests, barrels, shulker boxes) provide preservation bonuses configurable per container type
+- **food contamination** — rotten food (80%+ spoilage) in the same inventory accelerates spoilage of nearby fresh items, with a configurable per-slot penalty and a maximum cap; applies to both block containers and player inventory
 
-all preservation factors stack multiplicatively and tooltips display active bonuses
+all preservation factors stack multiplicatively and tooltips display active bonuses and penalties
 
 ### 🌾 crop lifecycle
 
@@ -139,6 +140,9 @@ all settings live in `spoilage.toml` and there's also an in-game config screen
 | `animalsPoisonedByRotten`       | `true`  | animals get poisoned by rotten food                 |
 | `preventPlantingSpoiled`        | `true`  | block planting of spoiled seeds                     |
 | `lootRandomizationEnabled`      | `true`  | randomize freshness in loot tables                  |
+| `contaminationEnabled`            | `true`  | rotten food accelerates spoilage of nearby items    |
+| `contaminationMultiplierPerSlot`  | `0.15`  | speed increase per rotten slot (+15% per slot)      |
+| `contaminationMaxMultiplier`      | `3.0`   | maximum penalty multiplier from food contamination  |
 
 ### 🌾 crops
 
@@ -190,6 +194,9 @@ use `globalSpeedMultiplier` to scale all spoilage speeds — individual items ca
 
 - **do crops rot on the vine?**
 yes — fully grown crops have a fresh period, after which they gradually rot and regress through growth stages, and bonemeal can reset the timer
+
+- **does rotten food contaminate nearby items?**
+yes — rotten food (80%+ spoilage) in the same inventory speeds up spoilage of fresh items nearby, at +15% per rotten slot (configurable), capped at 3x; items already rotten are not affected further
 
 - **is Cold Sweat required?**
 no — Cold Sweat integration is entirely optional, without it the mod uses vanilla biome temperature values
