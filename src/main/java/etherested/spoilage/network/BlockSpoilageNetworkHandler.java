@@ -142,9 +142,11 @@ public class BlockSpoilageNetworkHandler {
             chunkUpdates.computeIfAbsent(chunkPos, k -> new HashMap<>()).put(pos, spoilage);
         }
 
-        // remove stale entries after iteration
+        // remove stale entries after iteration and notify clients to clear cache
         for (BlockPos pos : entriesToRemove) {
             data.removeEntry(pos);
+            ChunkPos staleChunk = new ChunkPos(pos);
+            chunkUpdates.computeIfAbsent(staleChunk, k -> new HashMap<>()).put(pos, 0.0f);
         }
 
         // send updates to players watching each chunk

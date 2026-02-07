@@ -9,11 +9,13 @@ import etherested.spoilage.data.ChunkSpoilageData;
 import etherested.spoilage.data.SpoilableItemData;
 import etherested.spoilage.data.SpoilageItemRegistry;
 import etherested.spoilage.logic.SpoilageCalculator;
+import etherested.spoilage.network.BlockSpoilageNetworkHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -134,8 +136,9 @@ public class BlockSpoilageCleanupHandler {
             }
         }
 
-        // clean up the stored data
+        // clean up the stored data and notify clients to clear the cache
         ChunkSpoilageCapability.removeBlockSpoilage(level, pos);
+        BlockSpoilageNetworkHandler.syncSingleBlock((ServerLevel) level, pos, 0.0f);
     }
 
     /** handles generic spoilable block drops, transfers stored spoilage to dropped items */
@@ -190,8 +193,9 @@ public class BlockSpoilageCleanupHandler {
             }
         }
 
-        // clean up the stored data
+        // clean up the stored data and notify clients to clear the cache
         ChunkSpoilageCapability.removeBlockSpoilage(level, pos);
+        BlockSpoilageNetworkHandler.syncSingleBlock((ServerLevel) level, pos, 0.0f);
     }
 
     @SubscribeEvent
