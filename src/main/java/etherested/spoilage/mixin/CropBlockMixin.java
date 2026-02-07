@@ -11,9 +11,11 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * mixin to handle crop lifecycle with the spoilage system;
@@ -37,6 +39,31 @@ public abstract class CropBlockMixin {
     @Shadow
     public abstract BlockState getStateForAge(int age);
 
+    /**
+     * forces fully grown crops to keep receiving random ticks;
+     * vanilla returns false for max-age crops, which prevents the rot regression logic from running
+     */
+    @Inject(method = "isRandomlyTicking", at = @At("RETURN"), cancellable = true)
+    private void spoilage$keepTickingMatureCrops(BlockState state, CallbackInfoReturnable<Boolean> cir) {
+        if (!cir.getReturnValue() && isMaxAge(state) && spoilage$isSpoilageEnabled()) {
+            cir.setReturnValue(true);
+        }
+    }
+
+    /**
+     * safely checks if spoilage is enabled;
+     * isRandomlyTicking can be called before config is loaded during block registration,
+     * so we default to true when config is unavailable
+     */
+    @Unique
+    private static boolean spoilage$isSpoilageEnabled() {
+        try {
+            return SpoilageConfig.isEnabled();
+        } catch (IllegalStateException e) {
+            return true;
+        }
+    }
+
     /** handles crop growth and rotting lifecycle */
     @Inject(method = "randomTick", at = @At("RETURN"))
     private void spoilage$onCropRandomTick(BlockState state, ServerLevel level, BlockPos pos,
@@ -49,14 +76,15 @@ public abstract class CropBlockMixin {
         // the parameter is the state before vanilla's randomTick ran
         // if vanilla grew the crop, we need to check the new state
         BlockState currentState = level.getBlockState(pos);
-        handleCropLifecycle(currentState, level, pos);
+        spoilage$handleCropLifecycle(currentState, level, pos);
     }
 
     /**
      * crops stay fresh when fully grown, then rot and regress;
      * while growing, seed spoilage decreases proportionally until 0% at maturity
      */
-    private void handleCropLifecycle(BlockState state, ServerLevel level, BlockPos pos) {
+    @Unique
+    private void spoilage$handleCropLifecycle(BlockState state, ServerLevel level, BlockPos pos) {
         ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);
         int currentAge = getAge(state);
         int maxAge = getMaxAge();
