@@ -14,13 +14,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * client-side asset data for spoilage textures;
- * loaded from: assets/<namespace>/spoilage/<item_path>.json;
- * separates visual/texture data from server-side gameplay data;
- * supports flexible texture stage definitions with any key name;
- * any key that contains an object with a "model" field will be parsed as a texture stage
- */
+// client-side asset data for spoilage textures;
+// loaded from: assets/<namespace>/spoilage/<item_path>.json;
+// separates visual/texture data from server-side gameplay data;
+// supports flexible texture stage definitions with any key name;
+// any key that contains an object with a "model" field will be parsed as a texture stage
 public record SpoilageAssetItemData(
         Optional<List<TextureStage>> textureStages,
         // all texture stages (flexible key names)
@@ -34,10 +32,8 @@ public record SpoilageAssetItemData(
             Codec.unboundedMap(Codec.STRING, SpoilageTextureStage.CODEC).optionalFieldOf("_stages", Map.of()).forGetter(d -> Map.of())
     ).apply(instance, (ts, ignored) -> new SpoilageAssetItemData(ts, Map.of())));
 
-    /**
-     * parses asset data from JSON with flexible key support;
-     * any key containing an object with a "model" field is treated as a texture stage
-     */
+    // parses asset data from JSON with flexible key support;
+    // any key containing an object with a "model" field is treated as a texture stage
     public static SpoilageAssetItemData fromJson(JsonElement json) {
         if (!json.isJsonObject()) {
             return new SpoilageAssetItemData(Optional.empty(), Map.of());
@@ -76,12 +72,12 @@ public record SpoilageAssetItemData(
         return new SpoilageAssetItemData(textureStages, stages);
     }
 
-    /** gets a texture stage by key name */
+    // gets a texture stage by key name
     public Optional<SpoilageTextureStage> getTextureStage(String key) {
         return Optional.ofNullable(allStages.get(key));
     }
 
-    /** gets all texture stages */
+    // gets all texture stages
     public Map<String, SpoilageTextureStage> getAllTextureStages() {
         return allStages;
     }
@@ -102,51 +98,41 @@ public record SpoilageAssetItemData(
         return getTextureStage("rotten_block");
     }
 
-    /** returns true if this asset data has custom texture stages defined */
+    // returns true if this asset data has custom texture stages defined */
     public boolean hasTextureStages() {
         return textureStages.isPresent() && !textureStages.get().isEmpty();
     }
 
-    /**
-     * returns true if this asset data has a stale texture defined (item form);
-     * uses pattern matching to find any key containing "stale" but not "block"
-     */
+    // returns true if this asset data has a stale texture defined (item form);
+    // uses pattern matching to find any key containing "stale" but not "block"
     public boolean hasStaleTexture() {
         return allStages.keySet().stream()
                 .anyMatch(key -> key.toLowerCase().contains("stale") && !key.toLowerCase().contains("block"));
     }
 
-    /**
-     * returns true if this asset data has a rotten texture defined (item form);
-     * uses pattern matching to find any key containing "rotten" but not "block"
-     */
+    // returns true if this asset data has a rotten texture defined (item form);
+    // uses pattern matching to find any key containing "rotten" but not "block"
     public boolean hasRottenTexture() {
         return allStages.keySet().stream()
                 .anyMatch(key -> key.toLowerCase().contains("rotten") && !key.toLowerCase().contains("block"));
     }
 
-    /**
-     * returns true if this block has a stale texture defined;
-     * uses pattern matching to find any key containing both "stale" and "block"
-     */
+    // returns true if this block has a stale texture defined;
+    // uses pattern matching to find any key containing both "stale" and "block"
     public boolean hasStaleBlockTexture() {
         return allStages.keySet().stream()
                 .anyMatch(key -> key.toLowerCase().contains("stale") && key.toLowerCase().contains("block"));
     }
 
-    /**
-     * returns true if this block has a rotten texture defined;
-     * uses pattern matching to find any key containing both "rotten" and "block"
-     */
+     // returns true if this block has a rotten texture defined;
+     // uses pattern matching to find any key containing both "rotten" and "block"
     public boolean hasRottenBlockTexture() {
         return allStages.keySet().stream()
                 .anyMatch(key -> key.toLowerCase().contains("rotten") && key.toLowerCase().contains("block"));
     }
 
-    /**
-     * gets the stale texture for items using pattern matching;
-     * finds any key containing "stale" but not "block"
-     */
+    // gets the stale texture for items using pattern matching;
+    // finds any key containing "stale" but not "block"
     public Optional<SpoilageTextureStage> getStaleItemTexture() {
         return allStages.entrySet().stream()
                 .filter(e -> e.getKey().toLowerCase().contains("stale") && !e.getKey().toLowerCase().contains("block"))
@@ -154,10 +140,8 @@ public record SpoilageAssetItemData(
                 .findFirst();
     }
 
-    /**
-     * gets the rotten texture for items using pattern matching;
-     * finds any key containing "rotten" but not "block"
-     */
+    // gets the rotten texture for items using pattern matching;
+    // finds any key containing "rotten" but not "block"
     public Optional<SpoilageTextureStage> getRottenItemTexture() {
         return allStages.entrySet().stream()
                 .filter(e -> e.getKey().toLowerCase().contains("rotten") && !e.getKey().toLowerCase().contains("block"))
@@ -165,12 +149,12 @@ public record SpoilageAssetItemData(
                 .findFirst();
     }
 
-    /** returns true if this asset data has any spoilage textures (item form) */
+    // returns true if this asset data has any spoilage textures (item form)
     public boolean hasSpoilageTextures() {
         return hasStaleTexture() || hasRottenTexture();
     }
 
-    /** returns true if this block has any spoilage textures */
+    // returns true if this block has any spoilage textures
     public boolean hasBlockSpoilageTextures() {
         return hasStaleBlockTexture() || hasRottenBlockTexture();
     }

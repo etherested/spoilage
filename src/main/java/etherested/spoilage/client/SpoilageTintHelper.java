@@ -5,20 +5,16 @@ import etherested.spoilage.logic.SpoilageCalculator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 
-/**
- * helper class for calculating spoilage tint colors;
- * used by ItemRendererMixin to apply tints during rendering
- */
+// helper class for calculating spoilage tint colors;
+// used by ItemRendererMixin to apply tints during rendering
 public class SpoilageTintHelper {
 
     // no tint (white = multiply by 1.0)
     public static final int NO_TINT = 0xFFFFFF;
 
-    /**
-     * gets the spoilage tint color for an item stack;
-     * returns 0xFFFFFF (white) if no tint should be applied;
-     * items with custom texture stages skip tinting entirely
-     */
+    // gets the spoilage tint color for an item stack;
+    // returns 0xFFFFFF (white) if no tint should be applied;
+    // items with custom texture stages skip tinting entirely
     public static int getSpoilageTint(ItemStack stack) {
         if (!SpoilageConfig.showTintOverlay()) {
             return NO_TINT;
@@ -60,10 +56,8 @@ public class SpoilageTintHelper {
                 : calculateWarningTintColor(spoilage);
     }
 
-    /**
-     * warning style tint: yellow -> orange -> red;
-     * used to indicate danger/warning as item spoils
-     */
+    // warning style tint: yellow -> orange -> red;
+    // used to indicate danger/warning as item spoils
     private static int calculateWarningTintColor(float spoilage) {
         // normalize spoilage from 0.1-1.0 range to 0-1 range
         float t = (spoilage - 0.1f) / 0.9f;
@@ -90,10 +84,8 @@ public class SpoilageTintHelper {
         return (r << 16) | (g << 8) | b;
     }
 
-    /**
-     * rotten style tint: pale -> greenish -> brown/dark green;
-     * makes items look decayed and moldy
-     */
+    // rotten style tint: pale -> greenish -> brown/dark green;
+    // makes items look decayed and moldy
     private static int calculateRottenTintColor(float spoilage) {
         // normalize spoilage from 0.1-1.0 range to 0-1 range
         float t = (spoilage - 0.1f) / 0.9f;

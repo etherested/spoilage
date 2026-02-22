@@ -11,20 +11,16 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * central manager for all preservation providers;
- * combines multiple preservation factors to calculate final spoilage multiplier
- */
+// central manager for all preservation providers;
+// combines multiple preservation factors to calculate final spoilage multiplier
 public class PreservationManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PreservationManager.class);
     private static final List<PreservationProvider> providers = new ArrayList<>();
     private static boolean initialized = false;
 
-    /**
-     * initializes the preservation system;
-     * should be called during mod initialization
-     */
+    // initializes the preservation system;
+    // should be called during mod initialization
     public static void init() {
         if (initialized) {
             return;
@@ -42,24 +38,20 @@ public class PreservationManager {
         LOGGER.info("Preservation manager initialized with {} providers", providers.size());
     }
 
-    /**
-     * registers a custom preservation provider;
-     * can be used by other mods to add their own preservation factors
-     * @param provider the provider to register
-     */
+    // registers a custom preservation provider;
+    // can be used by other mods to add their own preservation factors
+    // @param provider the provider to register
     public static void registerProvider(PreservationProvider provider) {
         ensureInitialized();
         providers.add(provider);
         LOGGER.info("Registered custom preservation provider: {}", provider.getId());
     }
 
-    /**
-     * calculates the combined preservation multiplier for a position;
-     * multiplies all enabled providers' multipliers together
-     * @param level the world/level
-     * @param pos the block position
-     * @return the combined multiplier (lower = slower spoilage)
-     */
+    // calculates the combined preservation multiplier for a position;
+    // multiplies all enabled providers' multipliers together
+    // @param level the world/level
+    // @param pos the block position
+    // @return the combined multiplier (lower = slower spoilage)
     public static float getMultiplier(Level level, BlockPos pos) {
         ensureInitialized();
 
@@ -83,14 +75,12 @@ public class PreservationManager {
         return combinedMultiplier;
     }
 
-    /**
-     * calculates the combined preservation multiplier for a container;
-     * includes both position-based and container-specific factors
-     * @param level the world/level
-     * @param pos the block position
-     * @param blockEntity the container block entity (can be null)
-     * @return the combined multiplier
-     */
+    // calculates the combined preservation multiplier for a container;
+    // includes both position-based and container-specific factors
+    // @param level the world/level
+    // @param pos the block position
+    // @param blockEntity the container block entity (can be null)
+    // @return the combined multiplier
     public static float getContainerMultiplier(Level level, BlockPos pos, BlockEntity blockEntity) {
         float positionMultiplier = getMultiplier(level, pos);
 
@@ -100,12 +90,10 @@ public class PreservationManager {
         return positionMultiplier * containerMultiplier;
     }
 
-    /**
-     * gets detailed preservation info for display purposes
-     * @param level the world/level
-     * @param pos the block position
-     * @return a PreservationInfo containing all individual multipliers
-     */
+    // gets detailed preservation info for display purposes
+    // @param level the world/level
+    // @param pos the block position
+    // @return a PreservationInfo containing all individual multipliers
     public static PreservationInfo getPreservationInfo(Level level, BlockPos pos) {
         ensureInitialized();
 
@@ -141,13 +129,11 @@ public class PreservationManager {
         return new PreservationInfo(yLevel, biome, container, 1.0f);
     }
 
-    /**
-     * gets detailed preservation info for a container
-     * @param level the world/level
-     * @param pos the block position
-     * @param blockEntity the container block entity
-     * @return a PreservationInfo containing all individual multipliers
-     */
+    // gets detailed preservation info for a container
+    // @param level the world/level
+    // @param pos the block position
+    // @param blockEntity the container block entity
+    // @return a PreservationInfo containing all individual multipliers
     public static PreservationInfo getContainerPreservationInfo(Level level, BlockPos pos, BlockEntity blockEntity) {
         PreservationInfo posInfo = getPreservationInfo(level, pos);
         float containerMultiplier = ContainerSpoilageRates.getMultiplier(blockEntity);
@@ -160,7 +146,7 @@ public class PreservationManager {
         }
     }
 
-    /** record containing individual preservation multipliers for display */
+    // record containing individual preservation multipliers for display
     public record PreservationInfo(
             float yLevelMultiplier,
             float biomeMultiplier,

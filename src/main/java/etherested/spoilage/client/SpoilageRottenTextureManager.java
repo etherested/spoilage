@@ -12,10 +12,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+
+//? if neoforge {
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
+//?} else {
+/*import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
+import net.minecraft.client.Minecraft;
+*///?}
+
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -26,13 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * unified manager for spoilage texture models;
- * handles texture stages with smooth blending transitions;
- * supports explicit model definitions via resource packs;
- * models from any namespace (spoilage, Minecraft, other mods)
- */
+// unified manager for spoilage texture models;
+// handles texture stages with smooth blending transitions;
+// supports explicit model definitions via resource packs;
+// models from any namespace (spoilage, Minecraft, other mods)
+//? if neoforge {
 @EventBusSubscriber(modid = Spoilage.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+//?}
 public class SpoilageRottenTextureManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpoilageRottenTextureManager.class);
@@ -52,10 +59,8 @@ public class SpoilageRottenTextureManager {
         registerBuiltInModels();
     }
 
-    /**
-     * registers built-in spoilage models from the mod's assets;
-     * these use the subfolder pattern: item/<stage>/<item>
-     */
+    // registers built-in spoilage models from the mod's assets;
+    // these use the subfolder pattern: item/<stage>/<item>
     private static void registerBuiltInModels() {
         // stale item textures
         MODELS_TO_REGISTER.add(ResourceLocation.fromNamespaceAndPath("minecraft", "item/stale/apple"));
@@ -72,37 +77,46 @@ public class SpoilageRottenTextureManager {
         }
     }
 
-    /** registers additional models needed during model loading */
+    //? if neoforge {
     @SubscribeEvent
     public static void onRegisterAdditionalModels(ModelEvent.RegisterAdditional event) {
         for (ResourceLocation model : MODELS_TO_REGISTER) {
             event.register(ModelResourceLocation.standalone(model));
-            LOGGER.debug("Registered spoilage model: {}", model);
+            LOGGER.debug("registered spoilage model: {}", model);
         }
     }
 
-    /** caches explicitly registered models after baking is complete */
     @SubscribeEvent
     public static void onModifyBakingResult(ModelEvent.ModifyBakingResult event) {
         bakedModels.clear();
         noTextureItems.clear();
 
-        // cache explicitly registered models
         for (ResourceLocation modelLoc : MODELS_TO_REGISTER) {
             ModelResourceLocation mrl = ModelResourceLocation.standalone(modelLoc);
             BakedModel model = event.getModels().get(mrl);
             if (model != null) {
                 bakedModels.put(modelLoc, model);
-                LOGGER.debug("Cached spoilage model: {}", modelLoc);
+                LOGGER.debug("cached spoilage model: {}", modelLoc);
             } else {
-                LOGGER.warn("Failed to find registered spoilage model: {}", modelLoc);
+                LOGGER.warn("failed to find registered spoilage model: {}", modelLoc);
             }
         }
 
-        LOGGER.info("Spoilage texture manager initialized: {} explicit models", MODELS_TO_REGISTER.size());
+        LOGGER.info("spoilage texture manager initialized: {} explicit models", MODELS_TO_REGISTER.size());
     }
+    //?} else {
+    /*// Fabric: register model loading via ModelLoadingPlugin
+    public static void registerFabricEvents() {
+        ModelLoadingPlugin.register(pluginContext -> {
+            for (ResourceLocation model : MODELS_TO_REGISTER) {
+                pluginContext.addModels(model);
+            }
+            LOGGER.info("registered {} spoilage models for loading", MODELS_TO_REGISTER.size());
+        });
+    }
+    *///?}
 
-    /** checks if an item has any spoilage textures available */
+    // checks if an item has any spoilage textures available
     public static boolean hasSpoilageTextures(ItemStack stack) {
         if (!SpoilageConfig.useTextureBlending()) {
             return false;
@@ -128,10 +142,8 @@ public class SpoilageRottenTextureManager {
         return false;
     }
 
-    /**
-     * gets the stale texture stage data for an item;
-     * checks flexible key names - any key containing "stale" and "item"
-     */
+    // gets the stale texture stage data for an item;
+    // checks flexible key names - any key containing "stale" and "item"
     @Nullable
     public static SpoilageTextureStage getStaleTextureData(ItemStack stack) {
         if (!SpoilageConfig.useTextureBlending()) {
@@ -156,10 +168,8 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /**
-     * gets the rotten texture stage data for an item;
-     * checks flexible key names - any key containing "rotten" and "item"
-     */
+    // gets the rotten texture stage data for an item;
+    // checks flexible key names - any key containing "rotten" and "item"
     @Nullable
     public static SpoilageTextureStage getRottenTextureData(ItemStack stack) {
         if (!SpoilageConfig.useTextureBlending()) {
@@ -184,11 +194,9 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /**
-     * finds an item texture stage by pattern matching the key name or threshold;
-     * supports flexible key names like "my_rotten_effect" or custom stage names;
-     * excludes keys containing "block"
-     */
+    // finds an item texture stage by pattern matching the key name or threshold;
+    // supports flexible key names like "my_rotten_effect" or custom stage names;
+    // excludes keys containing "block"
     @Nullable
     private static SpoilageTextureStage findItemStageByPattern(SpoilageAssetItemData assetData, String pattern, float minThreshold) {
         Map<String, SpoilageTextureStage> allStages = assetData.getAllTextureStages();
@@ -212,32 +220,47 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /** gets the baked model for a texture stage */
+    // gets the baked model for a texture stage
     @Nullable
     public static BakedModel getModel(ResourceLocation modelLocation) {
-        return bakedModels.get(modelLocation);
+        BakedModel cached = bakedModels.get(modelLocation);
+        if (cached != null) return cached;
+
+        //? if fabric {
+        /*// lazy-load from model manager on Fabric (no ModifyBakingResult event);
+        // Fabric API adds getModel(ResourceLocation) for models registered via addModels()
+        if (MODELS_TO_REGISTER.contains(modelLocation)) {
+            BakedModel model = Minecraft.getInstance().getModelManager().getModel(modelLocation);
+            if (model != null) {
+                bakedModels.put(modelLocation, model);
+                return model;
+            }
+        }
+        *///?}
+
+        return null;
     }
 
-    /** gets the stale model for an item stack */
+    // gets the stale model for an item stack
     @Nullable
     public static BakedModel getStaleModel(ItemStack stack) {
         SpoilageTextureStage data = getStaleTextureData(stack);
         return data != null ? getModel(data.model()) : null;
     }
 
-    /** gets the rotten model for an item stack */
+    // gets the rotten model for an item stack
     @Nullable
     public static BakedModel getRottenModel(ItemStack stack) {
         SpoilageTextureStage data = getRottenTextureData(stack);
         return data != null ? getModel(data.model()) : null;
     }
 
-    /** registers a model to be loaded */
+    // registers a model to be loaded
     public static void registerModel(ResourceLocation modelLocation) {
         MODELS_TO_REGISTER.add(modelLocation);
     }
 
-    /** gets the rotten texture data for a block */
+    // gets the rotten texture data for a block
     @Nullable
     public static SpoilageTextureStage getBlockRottenTextureData(ResourceLocation blockId) {
         if (!SpoilageConfig.useTextureBlending()) {
@@ -260,7 +283,7 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /** gets the stale texture data for a block */
+    // gets the stale texture data for a block
     @Nullable
     public static SpoilageTextureStage getBlockStaleTextureData(ResourceLocation blockId) {
         if (!SpoilageConfig.useTextureBlending()) {
@@ -283,10 +306,8 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /**
-     * finds a texture stage by pattern matching the key name or threshold;
-     * supports flexible key names like "my_rotten_effect" or custom stage names
-     */
+    // finds a texture stage by pattern matching the key name or threshold;
+    // supports flexible key names like "my_rotten_effect" or custom stage names
     @Nullable
     private static SpoilageTextureStage findBlockStageByPattern(SpoilageAssetItemData assetData, String pattern, float minThreshold) {
         Map<String, SpoilageTextureStage> allStages = assetData.getAllTextureStages();
@@ -309,10 +330,8 @@ public class SpoilageRottenTextureManager {
         return null;
     }
 
-    /**
-     * gets all texture stages for a block (supports flexible key names);
-     * returns stages sorted by start threshold
-     */
+    // gets all texture stages for a block (supports flexible key names);
+    // returns stages sorted by start threshold
     public static List<SpoilageTextureStage> getAllBlockTextureStages(ResourceLocation blockId) {
         List<SpoilageTextureStage> stages = new ArrayList<>();
 
@@ -326,7 +345,7 @@ public class SpoilageRottenTextureManager {
         return stages;
     }
 
-    /** checks if a block has any spoilage textures available */
+    // checks if a block has any spoilage textures available
     public static boolean hasBlockSpoilageTextures(ResourceLocation blockId) {
         if (!SpoilageConfig.useTextureBlending()) {
             return false;
@@ -337,21 +356,19 @@ public class SpoilageRottenTextureManager {
         return assetData != null && assetData.hasBlockSpoilageTextures();
     }
 
-    /** clears all caches */
+    // clears all caches
     public static void clearCaches() {
         bakedModels.clear();
         noTextureItems.clear();
         SpoilageAssetRegistry.clear();
     }
 
-    /**
-     * gets the baked model for a texture stage based on block state;
-     * if the texture stage has state-aware models, looks up the appropriate model for the state;
-     * otherwise returns the default model
-     * @param data the texture stage data
-     * @param state the block state
-     * @return the baked model for this state, or null if not found
-     */
+    // gets the baked model for a texture stage based on block state;
+    // if the texture stage has state-aware models, looks up the appropriate model for the state;
+    // otherwise returns the default model
+    // @param data the texture stage data
+    // @param state the block state
+    // @return the baked model for this state, or null if not found
     @Nullable
     public static BakedModel getModelForState(SpoilageTextureStage data, BlockState state) {
         if (data == null) {

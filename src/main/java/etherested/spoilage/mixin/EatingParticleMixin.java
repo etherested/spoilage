@@ -18,11 +18,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * mixin to apply spoilage textures/tint to eating particles;
- * when eating spoiled food, particles will show the appropriate spoilage texture,
- * or fall back to a tint reflecting the spoilage level
- */
+// mixin to apply spoilage textures/tint to eating particles;
+// when eating spoiled food, particles will show the appropriate spoilage texture,
+// or fall back to a tint reflecting the spoilage level
 @Mixin(BreakingItemParticle.class)
 public abstract class EatingParticleMixin extends TextureSheetParticle {
 
@@ -30,10 +28,8 @@ public abstract class EatingParticleMixin extends TextureSheetParticle {
         super(level, x, y, z);
     }
 
-    /**
-     * applies spoilage texture or tint to the particle after it's constructed;
-     * particles sync with the currently displayed texture based on spoilage level
-     */
+    // applies spoilage texture or tint to the particle after it's constructed;
+    // particles sync with the currently displayed texture based on spoilage level
     @Inject(method = "<init>(Lnet/minecraft/client/multiplayer/ClientLevel;DDDLnet/minecraft/world/item/ItemStack;)V",
             at = @At("RETURN"))
     private void spoilage$applyRottenTextureToParticle(ClientLevel level, double x, double y, double z,
@@ -101,10 +97,8 @@ public abstract class EatingParticleMixin extends TextureSheetParticle {
         this.bCol *= tintB;
     }
 
-    /**
-     * calculates rotten-style tint for particles;
-     * makes particles look decayed and moldy
-     */
+    // calculates rotten-style tint for particles;
+    // makes particles look decayed and moldy
     @Unique
     private int spoilage$calculateParticleTint(float spoilage) {
         // normalize spoilage from 0.2-1.0 range to 0-1 range

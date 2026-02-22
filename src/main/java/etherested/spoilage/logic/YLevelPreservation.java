@@ -2,10 +2,8 @@ package etherested.spoilage.logic;
 
 import etherested.spoilage.config.SpoilageConfig;
 
-/**
- * calculates preservation multiplier based on Y-level;
- * lower Y = better preservation
- */
+// calculates preservation multiplier based on Y-level;
+// lower Y = better preservation
 public class YLevelPreservation {
     private static final float SURFACE_MULTIPLIER = 1.0f;
 

@@ -1,9 +1,7 @@
 package etherested.spoilage;
 
-/**
- * freshness levels with associated thresholds;
- * freshness = 1.0 - spoilage (so high freshness = low spoilage)
- */
+// freshness levels with associated thresholds;
+// freshness = 1.0 - spoilage (so high freshness = low spoilage)
 public enum FreshnessLevel {
     FRESH(80, 100),      // 80-100% freshness (0-20% spoilage)
     GOOD(60, 79),        // 60-79% freshness (21-40% spoilage)

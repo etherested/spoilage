@@ -7,15 +7,17 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+
+//? if neoforge {
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+//?}
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * network packet for syncing block spoilage data from server to client;
- * contains a map of block positions to their spoilage percentages
- */
+
+// network packet for syncing block spoilage data from server to client;
+// contains a map of block positions to their spoilage percentages
 public record BlockSpoilageSyncPacket(Map<BlockPos, Float> spoilageData) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<BlockSpoilageSyncPacket> TYPE =
@@ -36,15 +38,17 @@ public record BlockSpoilageSyncPacket(Map<BlockPos, Float> spoilageData) impleme
         return TYPE;
     }
 
-    /**
-     * handles the packet on the client side;
-     * updates the client cache with received spoilage data
-     */
-    public static void handleClient(BlockSpoilageSyncPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            for (Map.Entry<BlockPos, Float> entry : packet.spoilageData().entrySet()) {
-                BlockSpoilageClientCache.updateSpoilage(entry.getKey(), entry.getValue());
-            }
-        });
+    // shared client handler logic for both loaders
+    public static void handleClientShared(BlockSpoilageSyncPacket packet) {
+        for (Map.Entry<BlockPos, Float> entry : packet.spoilageData().entrySet()) {
+            BlockSpoilageClientCache.updateSpoilage(entry.getKey(), entry.getValue());
+        }
     }
+
+    //? if neoforge {
+    // NeoForge packet handler
+    public static void handleClientNeoForge(BlockSpoilageSyncPacket packet, IPayloadContext context) {
+        context.enqueueWork(() -> handleClientShared(packet));
+    }
+    //?}
 }

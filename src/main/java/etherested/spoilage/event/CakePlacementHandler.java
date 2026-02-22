@@ -16,98 +16,94 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+
+//? if neoforge {
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.BlockEvent;
+//?}
 
-/**
- * handles block placement to preserve item spoilage when placed;
- * works with any block that has spoilage data defined (cakes, placed food, etc.)
- */
+// handles block placement to preserve item spoilage when placed;
+// works with any block that has spoilage data defined (cakes, placed food, etc.)
+//? if neoforge {
 @EventBusSubscriber(modid = Spoilage.MODID)
+//?}
 public class CakePlacementHandler {
 
+    //? if neoforge {
     @SubscribeEvent
     public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
-        if (!SpoilageConfig.isEnabled()) {
-            return;
-        }
+        if (!SpoilageConfig.isEnabled()) return;
 
         BlockState placedState = event.getPlacedBlock();
         Block placedBlock = placedState.getBlock();
 
-        // check if this block has spoilage data defined
-        if (!SpoilageItemRegistry.isBlockSpoilable(placedBlock)) {
-            return;
-        }
+        if (!SpoilageItemRegistry.isBlockSpoilable(placedBlock)) return;
 
         Level level = (Level) event.getLevel();
-        if (level.isClientSide()) {
-            return;
-        }
+        if (level.isClientSide()) return;
 
         BlockPos pos = event.getPos();
 
-        // get the item that was used to place the block
         if (!(event.getEntity() instanceof Player player)) {
-            // if not placed by player, start fresh
-            ChunkSpoilageCapability.setBlockPlaced(level, pos);
-            if (level instanceof ServerLevel serverLevel) {
-                BlockSpoilageNetworkHandler.syncSingleBlock(serverLevel, pos, 0.0f);
-            }
+            handleNonPlayerPlacement(level, pos);
             return;
         }
 
-        // find the matching item in player's hands
+        handlePlayerPlacement(level, pos, player, placedBlock);
+    }
+    //?} else {
+    /*public static void registerFabricEvents() {
+        // Fabric uses BlockPlaceMixin instead — no event registration needed
+    }
+    *///?}
+
+    // handles block placement by a non-player entity
+    public static void handleNonPlayerPlacement(Level level, BlockPos pos) {
+        ChunkSpoilageCapability.setBlockPlaced(level, pos);
+        if (level instanceof ServerLevel serverLevel) {
+            BlockSpoilageNetworkHandler.syncSingleBlock(serverLevel, pos, 0.0f);
+        }
+    }
+
+    // handles block placement by a player, transferring item spoilage
+    public static void handlePlayerPlacement(Level level, BlockPos pos, Player player, Block placedBlock) {
         ItemStack placedItem = findMatchingItem(player, placedBlock);
         if (placedItem == null || !SpoilageCalculator.isSpoilable(placedItem)) {
-            // no spoilage data, start fresh
-            ChunkSpoilageCapability.setBlockPlaced(level, pos);
-            if (level instanceof ServerLevel serverLevel) {
-                BlockSpoilageNetworkHandler.syncSingleBlock(serverLevel, pos, 0.0f);
-            }
+            handleNonPlayerPlacement(level, pos);
             return;
         }
 
-        // get the item's spoilage and transfer to the placed block
         long worldTime = level.getGameTime();
         float itemSpoilage = SpoilageCalculator.getSpoilagePercent(placedItem, worldTime);
 
-        // store the block's spoilage (preserving from item)
         ChunkSpoilageCapability.setBlockPlacedWithSpoilage(level, pos, itemSpoilage);
 
-        // immediately sync to clients for instant visual update
         if (level instanceof ServerLevel serverLevel) {
             BlockSpoilageNetworkHandler.syncSingleBlock(serverLevel, pos, itemSpoilage);
         }
     }
 
-    /**
-     * finds an item in the player's hands that matches the placed block;
-     * first checks if there's a linked item (same registry ID),
-     * then falls back to checking if the block's item form matches
-     */
+    // finds an item in the player's hands that matches the placed block;
+    // first checks if there's a linked item (same registry ID),
+    // then falls back to checking if the block's item form matches
     private static ItemStack findMatchingItem(Player player, Block placedBlock) {
         ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(placedBlock);
 
-        // try to get the linked item (same registry ID as block)
         ResourceLocation linkedItemId = SpoilageItemRegistry.getLinkedItem(blockId);
         Item targetItem;
 
         if (linkedItemId != null) {
             targetItem = BuiltInRegistries.ITEM.get(linkedItemId);
         } else {
-            // fallback: use the block's item form
             targetItem = placedBlock.asItem();
         }
 
-        // check main hand
         ItemStack mainHand = player.getMainHandItem();
         if (mainHand.is(targetItem)) {
             return mainHand;
         }
 
-        // check offhand
         ItemStack offhand = player.getOffhandItem();
         if (offhand.is(targetItem)) {
             return offhand;

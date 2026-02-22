@@ -6,13 +6,11 @@ import net.minecraft.core.Holder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 
-/**
- * preservation provider based on vanilla biome temperature;
- * biome base temperatures typically range from 0.0 to 2.0:
- * - cold biomes (< threshold): slower spoilage (configurable multiplier)
- * - temperate biomes (between thresholds): normal spoilage (1.0x)
- * - hot biomes (> threshold): faster spoilage (configurable multiplier)
- */
+// preservation provider based on vanilla biome temperature;
+// biome base temperatures typically range from 0.0 to 2.0:
+//  - cold biomes (< threshold): slower spoilage (configurable multiplier)
+//  - temperate biomes (between thresholds): normal spoilage (1.0x)
+//  - hot biomes (> threshold): faster spoilage (configurable multiplier)
 public class BiomeTemperatureProvider implements PreservationProvider {
 
     public static final String ID = "biome_temperature";
@@ -30,12 +28,10 @@ public class BiomeTemperatureProvider implements PreservationProvider {
         return getMultiplierForTemperature(temperature);
     }
 
-    /**
-     * calculates the spoilage multiplier for a given temperature value;
-     * can be used by other systems (like Cold Sweat integration) for consistent behavior;
-     * @param temperature the temperature value
-     * @return the spoilage multiplier
-     */
+    // calculates the spoilage multiplier for a given temperature value;
+    // can be used by other systems (like Cold Sweat integration) for consistent behavior;
+    // @param temperature the temperature value
+    // @return the spoilage multiplier
     public static float getMultiplierForTemperature(float temperature) {
         float coldThreshold = SpoilageConfig.getBiomeColdThreshold();
         float hotThreshold = SpoilageConfig.getBiomeHotThreshold();

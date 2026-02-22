@@ -4,10 +4,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 
-/**
- * unified spoilage effects for both items and blocks;
- * ensures consistent effect tiers across all food consumption methods
- */
+// unified spoilage effects for both items and blocks;
+// ensures consistent effect tiers across all food consumption methods
 public class SpoilageEffects {
 
     // tier thresholds
@@ -51,16 +49,14 @@ public class SpoilageEffects {
     private static final int STALE_WEAKNESS_DURATION = 200;   // 10 seconds
     private static final int STALE_WEAKNESS_AMPLIFIER = 0;    // Weakness I
 
-    /**
-     * applies graduated spoilage effects based on spoilage percentage;
-     * used by both FoodDataMixin (items) and CakeBlockMixin (blocks);
-     * effect tiers:
-     *   - fresh/good (0-40%): no effects
-     *   - stale (40-60%): 20% chance Hunger I (5s), 5% chance Weakness I (10s)
-     *   - spoiling (60-80%): 50% Hunger I (15s), 20% Poison I (5s), 10% Nausea (7.5s)
-     *   - rotten (80-99%): Hunger II (30s), Poison I (10s), 30% Nausea (15s)
-     *   - inedible (100%): Hunger III (60s), Poison II (20s), Nausea (20s), Weakness II (15s) — all guaranteed
-     */
+    // applies graduated spoilage effects based on spoilage percentage;
+    // used by both FoodDataMixin (items) and CakeBlockMixin (blocks);
+    // effect tiers:
+    //  - fresh/good (0-40%): no effects
+    //  - stale (40-60%): 20% chance Hunger I (5s), 5% chance Weakness I (10s)
+    //  - spoiling (60-80%): 50% Hunger I (15s), 20% Poison I (5s), 10% Nausea (7.5s)
+    //  - rotten (80-99%): Hunger II (30s), Poison I (10s), 30% Nausea (15s)
+    //  - inedible (100%): Hunger III (60s), Poison II (20s), Nausea (20s), Weakness II (15s) — all guaranteed
     public static void applySpoilageEffects(Player player, float spoilage) {
         if (spoilage >= THRESHOLD_INEDIBLE) {
             // inedible tier (100%) — all effects guaranteed

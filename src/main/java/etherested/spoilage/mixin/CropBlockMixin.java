@@ -17,14 +17,12 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to handle crop lifecycle with the spoilage system;
- *   - recovery phase: stale seeds freeze growth until freshness fully recovers
- *   - growing phase: after recovery (or if seed is fresh), crops grow normally
- *   - fresh period: fully grown crops stay 100% fresh for configurable duration
- *   - rotting phase: after fresh period, crops slowly rot and regress through growth stages
- *   - inedible: at minimum stage, crops become inedible when harvested
- */
+// mixin to handle crop lifecycle with the spoilage system;
+//  - recovery phase: stale seeds freeze growth until freshness fully recovers
+//  - growing phase: after recovery (or if seed is fresh), crops grow normally
+//  - fresh period: fully grown crops stay 100% fresh for configurable duration
+//  - rotting phase: after fresh period, crops slowly rot and regress through growth stages
+//  - inedible: at minimum stage, crops become inedible when harvested
 @Mixin(CropBlock.class)
 public abstract class CropBlockMixin {
 
@@ -40,10 +38,8 @@ public abstract class CropBlockMixin {
     @Shadow
     public abstract BlockState getStateForAge(int age);
 
-    /**
-     * forces fully grown crops to keep receiving random ticks;
-     * vanilla returns false for max-age crops, which prevents the rot regression logic from running
-     */
+    // forces fully grown crops to keep receiving random ticks;
+    // vanilla returns false for max-age crops, which prevents the rot regression logic from running
     @Inject(method = "isRandomlyTicking", at = @At("RETURN"), cancellable = true)
     private void spoilage$keepTickingMatureCrops(BlockState state, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValue() && isMaxAge(state) && spoilage$isSpoilageEnabled()) {
@@ -51,11 +47,9 @@ public abstract class CropBlockMixin {
         }
     }
 
-    /**
-     * safely checks if spoilage is enabled;
-     * isRandomlyTicking can be called before config is loaded during block registration,
-     * so we default to true when config is unavailable
-     */
+    // safely checks if spoilage is enabled;
+    // isRandomlyTicking can be called before config is loaded during block registration,
+    // so we default to true when config is unavailable
     @Unique
     private static boolean spoilage$isSpoilageEnabled() {
         try {
@@ -65,10 +59,8 @@ public abstract class CropBlockMixin {
         }
     }
 
-    /**
-     * freezes crop growth while the seed's spoilage is still recovering;
-     * when recovery completes, clears initialSpoilage and lets the tick proceed
-     */
+    // freezes crop growth while the seed's spoilage is still recovering;
+    // when recovery completes, clears initialSpoilage and lets the tick proceed
     @Inject(method = "randomTick", at = @At("HEAD"), cancellable = true)
     private void spoilage$freezeRecoveringCrop(BlockState state, ServerLevel level, BlockPos pos,
                                                 RandomSource random, CallbackInfo ci) {
@@ -94,7 +86,7 @@ public abstract class CropBlockMixin {
         }
     }
 
-    /** handles crop growth and rotting lifecycle */
+    // handles crop growth and rotting lifecycle
     @Inject(method = "randomTick", at = @At("RETURN"))
     private void spoilage$onCropRandomTick(BlockState state, ServerLevel level, BlockPos pos,
                                             RandomSource random, CallbackInfo ci) {
@@ -109,7 +101,7 @@ public abstract class CropBlockMixin {
         spoilage$handleCropLifecycle(currentState, level, pos);
     }
 
-    /** crops stay fresh when fully grown, then rot and regress through growth stages */
+    // crops stay fresh when fully grown, then rot and regress through growth stages
     @Unique
     private void spoilage$handleCropLifecycle(BlockState state, ServerLevel level, BlockPos pos) {
         ChunkSpoilageData.BlockSpoilageEntry entry = ChunkSpoilageCapability.getBlockSpoilage(level, pos);

@@ -7,12 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.Optional;
 import java.util.OptionalLong;
 
-/**
- * per-item/block spoilage definition loaded from datapacks;
- * loaded from: data/<namespace>/spoilage/<name>.json;
- * a single file can define spoilage for both an item and its block form;
- * by default data applies to the item, set is_block: true to also apply to the block
- */
+// per-item/block spoilage definition loaded from datapacks;
+// loaded from: data/<namespace>/spoilage/<name>.json;
+// a single file can define spoilage for both an item and its block form;
+// by default data applies to the item, set is_block: true to also apply to the block
 public record SpoilableItemData(
         ResourceLocation spoilageGroup,
         OptionalLong lifetimeOverride,

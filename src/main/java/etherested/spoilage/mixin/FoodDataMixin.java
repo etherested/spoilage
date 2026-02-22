@@ -14,10 +14,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-/**
- * mixin to reduce food nutrition based on spoilage percentage;
- * targets Player.eat() which calls FoodData.eat(FoodProperties)
- */
+// mixin to reduce food nutrition based on spoilage percentage;
+// targets Player.eat() which calls FoodData.eat(FoodProperties)
 @Mixin(Player.class)
 public abstract class FoodDataMixin {
 
@@ -64,7 +62,7 @@ public abstract class FoodDataMixin {
 
         // trigger achievement for eating fully spoiled food
         if (spoilage >= 1.0f && player instanceof ServerPlayer serverPlayer) {
-            ModTriggers.EAT_INEDIBLE.get().trigger(serverPlayer);
+            ModTriggers.eatInedible().trigger(serverPlayer);
         }
     }
 

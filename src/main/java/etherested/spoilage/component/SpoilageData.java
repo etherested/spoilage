@@ -6,17 +6,15 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-/**
- * data component storing spoilage state for items
- * @param creationTime world time when first viewed (-1 = uninitialized)
- * @param remainingLifetime ticks remaining when paused (-1 = not paused)
- * @param isPaused spoilage paused (preservation/offline)
- * @param preservationMultiplier current multiplier (1.0 = normal, lower = slower spoilage)
- * @param yLevelSavedTicks cumulative ticks saved from Y-level preservation
- * @param lastYLevelProcessTick world tick when Y-level processing last occurred
- * @param currentContainerYMultiplier current preservation multiplier while in container (1.0 = not in container/no benefit)
- * @param biomeMultiplier current biome-based multiplier (1.0 = normal, < 1.0 = cold, > 1.0 = hot)
- */
+// data component storing spoilage state for items
+// @param creationTime world time when first viewed (-1 = uninitialized)
+// @param remainingLifetime ticks remaining when paused (-1 = not paused)
+// @param isPaused spoilage paused (preservation/offline)
+// @param preservationMultiplier current multiplier (1.0 = normal, lower = slower spoilage)
+// @param yLevelSavedTicks cumulative ticks saved from Y-level preservation
+// @param lastYLevelProcessTick world tick when Y-level processing last occurred
+// @param currentContainerYMultiplier current preservation multiplier while in container (1.0 = not in container/no benefit)
+// @param biomeMultiplier current biome-based multiplier (1.0 = normal, < 1.0 = cold, > 1.0 = hot)
 public record SpoilageData(
         long creationTime,
         long remainingLifetime,

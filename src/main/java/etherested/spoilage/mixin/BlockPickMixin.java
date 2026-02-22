@@ -16,18 +16,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.loading.FMLEnvironment;
+import etherested.spoilage.platform.PlatformHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to preserve spoilage when using pick block (middle mouse) on spoilable blocks;
- * targets the Block class since most blocks don't override getCloneItemStack
- */
+// mixin to preserve spoilage when using pick block (middle mouse) on spoilable blocks;
+// targets the Block class since most blocks don't override getCloneItemStack
 @Mixin(Block.class)
 public abstract class BlockPickMixin {
 
@@ -35,7 +32,7 @@ public abstract class BlockPickMixin {
     @Unique
     private static final long FALLBACK_LIFETIME = 72000L;
 
-    /** preserves spoilage when using pick block (middle mouse) on spoilable blocks */
+    // preserves spoilage when using pick block (middle mouse) on spoilable blocks
     @Inject(method = "getCloneItemStack", at = @At("RETURN"), cancellable = true)
     private void spoilage$preservePickBlockSpoilage(LevelReader level, BlockPos pos, BlockState state,
                                                      CallbackInfoReturnable<ItemStack> cir) {
@@ -88,7 +85,7 @@ public abstract class BlockPickMixin {
                 // inedible items: use creationTime = 0 so all inedible items stack
                 // this matches the pattern in BlockSpoilageCleanupHandler
                 SpoilageData inedibleData = new SpoilageData(0L, SpoilageData.NOT_PAUSED, false, 1.0f, 0L, 0L, 1.0f, 1.0f);
-                result.set(ModDataComponents.SPOILAGE_DATA.get(), inedibleData);
+                result.set(ModDataComponents.spoilageData(), inedibleData);
             } else {
                 // normal partially spoiled: use existing method
                 SpoilageCalculator.initializeSpoilageWithPercent(result, worldTime, spoilage);
@@ -118,23 +115,19 @@ public abstract class BlockPickMixin {
         return lifetime > 0 ? lifetime : FALLBACK_LIFETIME;
     }
 
-    /**
-     * gets spoilage from client cache. Returns -1 if not found;
-     * uses a supplier to defer class loading of client-only BlockSpoilageClientCache
-     */
+    // gets spoilage from client cache. Returns -1 if not found;
+    // uses a supplier to defer class loading of client-only BlockSpoilageClientCache
     @Unique
     private static float spoilage$getClientCacheSpoilage(BlockPos pos) {
-        if (FMLEnvironment.dist != Dist.CLIENT) {
+        if (!PlatformHelper.isClient()) {
             return -1.0f;
         }
         // use inner class to defer loading of client-only BlockSpoilageClientCache
         return ClientCacheHelper.getSpoilage(pos);
     }
 
-    /**
-     * inner class to isolate client-only class references;
-     * this class is only loaded when actually accessed, which only happens on client
-     */
+    // inner class to isolate client-only class references;
+    // this class is only loaded when actually accessed, which only happens on client
     private static class ClientCacheHelper {
         static float getSpoilage(BlockPos pos) {
             if (BlockSpoilageClientCache.hasSpoilage(pos)) {

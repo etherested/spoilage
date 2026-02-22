@@ -21,10 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to add spoilage to placed cakes;
- * tracks cake placement time and applies spoilage effects when eaten
- */
+// mixin to add spoilage to placed cakes;
+// tracks cake placement time and applies spoilage effects when eaten
 @Mixin(CakeBlock.class)
 public abstract class CakeBlockMixin {
 
@@ -40,10 +38,8 @@ public abstract class CakeBlockMixin {
         return lifetime > 0 ? lifetime : FALLBACK_LIFETIME;
     }
 
-    /**
-     * intercepts cake eating to apply spoilage effects;
-     * uses RETURN injection to ensure effects only apply when player actually eats
-     */
+    // intercepts cake eating to apply spoilage effects;
+    // uses RETURN injection to ensure effects only apply when player actually eats
     @Inject(method = "useWithoutItem", at = @At("RETURN"))
     private void spoilage$checkCakeSpoilage(BlockState state, Level level, BlockPos pos,
                                              Player player, BlockHitResult hitResult,

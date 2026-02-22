@@ -2,21 +2,17 @@ package etherested.spoilage.client;
 
 import etherested.spoilage.config.SpoilageConfig;
 
-/**
- * helper class for calculating block spoilage tint colors;
- * used by BlockSpoilageOverlayRenderer for blocks without custom textures;
- * unlike items, blocks don't use Minecraft's BlockColor system for spoilage
- * because that requires models to have tint indices defined,
- * instead, the BlockSpoilageOverlayRenderer renders a tinted overlay on top of the block
- */
+// helper class for calculating block spoilage tint colors;
+// used by BlockSpoilageOverlayRenderer for blocks without custom textures;
+// unlike items, blocks don't use Minecraft's BlockColor system for spoilage
+// because that requires models to have tint indices defined,
+// instead, the BlockSpoilageOverlayRenderer renders a tinted overlay on top of the block
 public class BlockSpoilageTintHandler {
 
-    /**
-     * calculates the tint color for a block based on spoilage percentage;
-     * uses the same color calculation as SpoilageTintHelper for consistency
-     * @param spoilage spoilage percentage (0.0 to 1.0)
-     * @return RGB color value
-     */
+    // calculates the tint color for a block based on spoilage percentage;
+    // uses the same color calculation as SpoilageTintHelper for consistency
+    // @param spoilage spoilage percentage (0.0 to 1.0)
+    // @return RGB color value
     public static int calculateBlockTintColor(float spoilage) {
         // normalize spoilage from 0.1-1.0 range to 0-1 range
         float t = (spoilage - 0.1f) / 0.9f;

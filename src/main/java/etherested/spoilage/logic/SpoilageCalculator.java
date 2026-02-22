@@ -11,23 +11,21 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-/** core calculation logic for spoilage mechanics */
+// core calculation logic for spoilage mechanics
 public class SpoilageCalculator {
 
-    /**
-     * gets the initialized spoilage data from a stack, or null if not present/initialized;
-     * this is a helper to consolidate the common null/initialized check pattern
-     */
+    // gets the initialized spoilage data from a stack, or null if not present/initialized;
+    // this is a helper to consolidate the common null/initialized check pattern
     @Nullable
     public static SpoilageData getInitializedData(ItemStack stack) {
-        SpoilageData data = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData data = stack.get(ModDataComponents.spoilageData());
         if (data == null || !data.isInitialized()) {
             return null;
         }
         return data;
     }
 
-    /** gets the spoilage percentage (0.0 = fresh, 1.0 = rotten) */
+    // gets the spoilage percentage (0.0 = fresh, 1.0 = rotten)
     public static float getSpoilagePercent(ItemStack stack, long worldTime) {
         if (!isSpoilable(stack)) {
             return 0.0f;
@@ -51,7 +49,7 @@ public class SpoilageCalculator {
         return 1.0f - ((float) remaining / lifetime);
     }
 
-    /** gets the remaining ticks until fully spoiled */
+    // gets the remaining ticks until fully spoiled
     public static long getRemainingTicks(ItemStack stack, long worldTime) {
         if (!isSpoilable(stack)) {
             return Long.MAX_VALUE;
@@ -73,11 +71,9 @@ public class SpoilageCalculator {
         return Math.max(0, lifetime - effectiveElapsed);
     }
 
-    /**
-     * gets the remaining ticks for display purposes (tooltips);
-     * calculates prospective savings to prevent timer rollback between processing ticks;
-     * shows real wall-clock time until spoiled at current preservation rate
-     */
+    // gets the remaining ticks for display purposes (tooltips);
+    // calculates prospective savings to prevent timer rollback between processing ticks;
+    // shows real wall-clock time until spoiled at current preservation rate
     public static long getRemainingTicksForDisplay(ItemStack stack, long worldTime) {
         if (!isSpoilable(stack)) {
             return Long.MAX_VALUE;
@@ -126,7 +122,7 @@ public class SpoilageCalculator {
         return remainingTicks;
     }
 
-    /** gets the total lifetime for an item based on its spoilage group */
+    // gets the total lifetime for an item based on its spoilage group
     public static long getLifetime(ItemStack stack) {
         SpoilableItemData itemData = getSpoilableData(stack);
         if (itemData == null) {
@@ -141,7 +137,7 @@ public class SpoilageCalculator {
         return itemData.getLifetime(groupData);
     }
 
-    /** checks if an item is spoilable via datapack configuration */
+    // checks if an item is spoilable via datapack configuration
     public static boolean isSpoilable(ItemStack stack) {
         if (stack.isEmpty()) {
             return false;
@@ -149,7 +145,7 @@ public class SpoilageCalculator {
         return getSpoilableData(stack) != null;
     }
 
-    /** gets the spoilable data for an item from the spoilage registry */
+    // gets the spoilable data for an item from the spoilage registry
     @Nullable
     public static SpoilableItemData getSpoilableData(ItemStack stack) {
         if (stack.isEmpty()) {
@@ -158,7 +154,7 @@ public class SpoilageCalculator {
         return SpoilageItemRegistry.getData(stack.getItem());
     }
 
-    /** gets the spoilage group data for an item */
+    // gets the spoilage group data for an item
     @Nullable
     public static SpoilageGroupData getGroupData(ItemStack stack) {
         SpoilableItemData itemData = getSpoilableData(stack);
@@ -168,7 +164,7 @@ public class SpoilageCalculator {
         return SpoilageGroupRegistry.getGroup(itemData.spoilageGroup());
     }
 
-    /** calculates weighted average spoilage when combining stacks or crafting */
+    // calculates weighted average spoilage when combining stacks or crafting
     public static float calculateWeightedAverageSpoilage(ItemStack[] ingredients, long worldTime) {
         float totalWeight = 0;
         float totalSpoilage = 0;
@@ -189,21 +185,21 @@ public class SpoilageCalculator {
         return totalSpoilage / totalWeight;
     }
 
-    /** initializes spoilage data on an item stack */
+    // initializes spoilage data on an item stack
     public static void initializeSpoilage(ItemStack stack, long worldTime) {
         if (!isSpoilable(stack)) {
             return;
         }
 
-        SpoilageData existing = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData existing = stack.get(ModDataComponents.spoilageData());
         if (existing != null && existing.isInitialized()) {
             return;
         }
 
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), SpoilageData.DEFAULT.initialize(worldTime));
+        stack.set(ModDataComponents.spoilageData(), SpoilageData.DEFAULT.initialize(worldTime));
     }
 
-    /** initializes spoilage with a specific starting percentage (for loot tables) */
+    // initializes spoilage with a specific starting percentage (for loot tables)
     public static void initializeSpoilageWithPercent(ItemStack stack, long worldTime, float spoilagePercent) {
         if (!isSpoilable(stack)) {
             return;
@@ -213,13 +209,11 @@ public class SpoilageCalculator {
         long elapsed = (long) (lifetime * spoilagePercent);
         long adjustedCreation = worldTime - elapsed;
 
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), new SpoilageData(adjustedCreation, SpoilageData.NOT_PAUSED, false, 1.0f, 0L, 0L, 1.0f, 1.0f));
+        stack.set(ModDataComponents.spoilageData(), new SpoilageData(adjustedCreation, SpoilageData.NOT_PAUSED, false, 1.0f, 0L, 0L, 1.0f, 1.0f));
     }
 
-    /**
-     * gets the current preservation rate for display purposes;
-     * returns 1.0 if no preservation, < 1.0 if preserved (e.g. 0.5 = 50% slower)
-     */
+    // gets the current preservation rate for display purposes;
+    // returns 1.0 if no preservation, < 1.0 if preserved (e.g. 0.5 = 50% slower)
     public static float getPreservationRateForDisplay(ItemStack stack) {
         SpoilageData data = getInitializedData(stack);
         if (data != null && data.preservationMultiplier() != 1.0f) {
@@ -228,7 +222,7 @@ public class SpoilageCalculator {
         return 1.0f;
     }
 
-    /** creates spoilage data from weighted average (for crafting results) */
+    // creates spoilage data from weighted average (for crafting results)
     public static void applyCraftedSpoilage(ItemStack result, ItemStack[] ingredients, long worldTime) {
         if (!isSpoilable(result)) {
             return;
@@ -238,7 +232,7 @@ public class SpoilageCalculator {
         initializeSpoilageWithPercent(result, worldTime, avgSpoilage);
     }
 
-    /** counts inventory slots containing rotten food (80%+ spoilage) */
+    // counts inventory slots containing rotten food (80%+ spoilage)
     public static int countRottenSlots(Container container, long worldTime) {
         int count = 0;
         for (int i = 0; i < container.getContainerSize(); i++) {
@@ -253,7 +247,7 @@ public class SpoilageCalculator {
         return count;
     }
 
-    /** calculates food contamination multiplier from rotten slot count */
+    // calculates food contamination multiplier from rotten slot count
     public static float getContaminationMultiplier(int rottenSlots) {
         if (!SpoilageConfig.isContaminationEnabled() || rottenSlots <= 0) {
             return 1.0f;
@@ -262,7 +256,7 @@ public class SpoilageCalculator {
         return Math.min(multiplier, SpoilageConfig.getContaminationMaxMultiplier());
     }
 
-    /** calculates weighted average spoilage when merging two stacks */
+    // calculates weighted average spoilage when merging two stacks
     public static SpoilageData mergeStacks(ItemStack existing, ItemStack incoming, long worldTime) {
         if (!isSpoilable(existing) || !isSpoilable(incoming)) {
             return SpoilageData.DEFAULT;
@@ -281,7 +275,7 @@ public class SpoilageCalculator {
         long elapsed = (long) (lifetime * weightedSpoilage);
         long adjustedCreation = worldTime - elapsed;
 
-        SpoilageData existingData = existing.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData existingData = existing.get(ModDataComponents.spoilageData());
         float preservationMult = existingData != null ? existingData.preservationMultiplier() : 1.0f;
 
         return new SpoilageData(adjustedCreation, SpoilageData.NOT_PAUSED, false, preservationMult, 0L, 0L, 1.0f, 1.0f);

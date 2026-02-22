@@ -1,461 +1,470 @@
 package etherested.spoilage.config;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import etherested.spoilage.platform.PlatformHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
+// JSON-based config system for spoilage;
+// loads/saves config/spoilage.json using Gson;
+// auto-creates defaults on first run;
+// validates values on load
 public class SpoilageConfig {
-    public static final ModConfigSpec SPEC;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpoilageConfig.class);
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final String CONFIG_FILE = "spoilage.json";
+
+    private static SpoilageConfig INSTANCE;
 
     // general settings
-    public static final ModConfigSpec.BooleanValue ENABLED;
-    public static final ModConfigSpec.DoubleValue GLOBAL_SPEED_MULTIPLIER;
-    public static final ModConfigSpec.IntValue CHECK_INTERVAL_TICKS;
+    private boolean enabled = true;
+    private double globalSpeedMultiplier = 1.0;
+    private int checkIntervalTicks = 100;
 
     // tooltip settings
-    public static final ModConfigSpec.BooleanValue SHOW_REMAINING_TIME;
-    public static final ModConfigSpec.BooleanValue SHOW_FRESHNESS_WORD;
-    public static final ModConfigSpec.BooleanValue SHOW_FRESHNESS_PERCENTAGE;
+    private boolean showRemainingTime = true;
+    private boolean showFreshnessWord = true;
+    private boolean showFreshnessPercentage = false;
 
     // visual settings
-    public static final ModConfigSpec.BooleanValue SHOW_TINT_OVERLAY;
-    public static final ModConfigSpec.BooleanValue TINT_STYLE_ROTTEN;
-
-    // texture blending settings
-    public static final ModConfigSpec.BooleanValue USE_TEXTURE_BLENDING;
-    public static final ModConfigSpec.DoubleValue BLEND_START_THRESHOLD;
-    public static final ModConfigSpec.DoubleValue BLEND_FULL_THRESHOLD;
+    private boolean showTintOverlay = true;
+    private boolean tintStyleRotten = true;
+    private boolean useTextureBlending = true;
+    private double blendStartThreshold = 0.2;
+    private double blendFullThreshold = 1.0;
 
     // preservation settings
-    public static final ModConfigSpec.BooleanValue Y_LEVEL_PRESERVATION_ENABLED;
-    public static final ModConfigSpec.BooleanValue BIOME_TEMPERATURE_PRESERVATION_ENABLED;
-    public static final ModConfigSpec.BooleanValue COLD_SWEAT_INTEGRATION_ENABLED;
+    private boolean yLevelPreservationEnabled = true;
+    private boolean biomeTemperaturePreservationEnabled = true;
+    private boolean coldSweatIntegrationEnabled = true;
 
     // Y-level preservation settings
-    public static final ModConfigSpec.IntValue Y_LEVEL_DEEP;
-    public static final ModConfigSpec.IntValue Y_LEVEL_UNDERGROUND;
-    public static final ModConfigSpec.IntValue Y_LEVEL_SURFACE;
-    public static final ModConfigSpec.DoubleValue Y_LEVEL_DEEP_MULTIPLIER;
-    public static final ModConfigSpec.DoubleValue Y_LEVEL_UNDERGROUND_MULTIPLIER;
-    public static final ModConfigSpec.DoubleValue Y_LEVEL_SHALLOW_MULTIPLIER;
+    private int yLevelDeep = 0;
+    private int yLevelUnderground = 50;
+    private int yLevelSurface = 63;
+    private double yLevelDeepMultiplier = 0.6;
+    private double yLevelUndergroundMultiplier = 0.8;
+    private double yLevelShallowMultiplier = 0.9;
 
     // biome preservation settings
-    public static final ModConfigSpec.DoubleValue BIOME_COLD_THRESHOLD;
-    public static final ModConfigSpec.DoubleValue BIOME_HOT_THRESHOLD;
-    public static final ModConfigSpec.DoubleValue BIOME_COLD_MULTIPLIER;
-    public static final ModConfigSpec.DoubleValue BIOME_HOT_MULTIPLIER;
+    private double biomeColdThreshold = 0.3;
+    private double biomeHotThreshold = 0.9;
+    private double biomeColdMultiplier = 0.7;
+    private double biomeHotMultiplier = 1.3;
 
     // gameplay settings
-    public static final ModConfigSpec.BooleanValue OFFHAND_AUTO_COMBINE_ENABLED;
-    public static final ModConfigSpec.BooleanValue VILLAGERS_IGNORE_SPOILED;
-    public static final ModConfigSpec.BooleanValue ANIMALS_POISONED_BY_ROTTEN;
-    public static final ModConfigSpec.BooleanValue PREVENT_PLANTING_SPOILED;
-    public static final ModConfigSpec.BooleanValue LOOT_RANDOMIZATION_ENABLED;
-
-    // food contamination settings
-    public static final ModConfigSpec.BooleanValue CONTAMINATION_ENABLED;
-    public static final ModConfigSpec.DoubleValue CONTAMINATION_MULTIPLIER_PER_SLOT;
-    public static final ModConfigSpec.DoubleValue CONTAMINATION_MAX_MULTIPLIER;
-
-    // container settings
-    public static final ModConfigSpec.ConfigValue<List<? extends String>> CONTAINER_SPOILAGE_RATES;
+    private boolean offhandAutoCombineEnabled = true;
+    private boolean villagersIgnoreSpoiled = true;
+    private boolean animalsPoisonedByRotten = true;
+    private boolean preventPlantingSpoiled = true;
+    private boolean lootRandomizationEnabled = true;
+    private boolean contaminationEnabled = true;
+    private double contaminationMultiplierPerSlot = 0.15;
+    private double contaminationMaxMultiplier = 3.0;
+    private List<String> containerSpoilageRates = new ArrayList<>(List.of(
+            "minecraft:shulker_box;0.85",
+            "minecraft:barrel;0.9",
+            "minecraft:chest;0.95"
+    ));
 
     // crop lifecycle settings
-    public static final ModConfigSpec.IntValue CROP_FRESH_PERIOD_TICKS;
-    public static final ModConfigSpec.IntValue CROP_ROT_PERIOD_TICKS;
-    public static final ModConfigSpec.IntValue CROP_MINIMUM_HARVEST_STAGE;
-    public static final ModConfigSpec.BooleanValue BONEMEAL_RESETS_ROT;
-    public static final ModConfigSpec.BooleanValue BONEMEAL_BLOCKED_ON_ROTTEN;
-    public static final ModConfigSpec.BooleanValue STALE_SEED_GROWTH_PENALTY;
-    public static final ModConfigSpec.IntValue STALE_SEED_RECOVERY_TICKS;
+    private int cropFreshPeriodTicks = 72000;
+    private int cropRotPeriodTicks = 48000;
+    private int cropMinimumHarvestStage = 1;
+    private boolean bonemealResetsRot = true;
+    private boolean bonemealBlockedOnRotten = true;
+    private boolean staleSeedGrowthPenalty = true;
+    private int staleSeedRecoveryTicks = 48000;
 
-    static {
-        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
+    private SpoilageConfig() {}
 
-        builder.comment("Spoilage System Configuration");
-        builder.push("general");
+    // loads config from disk or creates defaults
+    public static void load() {
+        INSTANCE = new SpoilageConfig();
+        Path configPath = PlatformHelper.getConfigDir().resolve(CONFIG_FILE);
 
-        ENABLED = builder
-                .comment("Enable or disable the spoilage system entirely")
-                .define("enabled", true);
+        if (Files.exists(configPath)) {
+            try (Reader reader = Files.newBufferedReader(configPath)) {
+                JsonObject json = GSON.fromJson(reader, JsonObject.class);
+                if (json != null) {
+                    INSTANCE.deserialize(json);
+                }
+                LOGGER.info("loaded spoilage config from {}", configPath);
+            } catch (IOException e) {
+                LOGGER.error("failed to load spoilage config: {}", e.getMessage());
+            }
+        } else {
+            LOGGER.info("no spoilage config found, creating defaults at {}", configPath);
+        }
 
-        GLOBAL_SPEED_MULTIPLIER = builder
-                .comment("Global spoilage speed multiplier (higher = faster spoilage)")
-                .defineInRange("globalSpeedMultiplier", 1.0, 0.01, 100.0);
-
-        CHECK_INTERVAL_TICKS = builder
-                .comment("How often to check and update spoilage (in ticks, 20 ticks = 1 second)")
-                .defineInRange("checkIntervalTicks", 100, 1, 12000);
-
-        builder.pop();
-
-        // preservation settings
-        builder.comment("Preservation system settings").push("preservation");
-
-        Y_LEVEL_PRESERVATION_ENABLED = builder
-                .comment("Enable Y-level based preservation (deeper = slower spoilage)")
-                .define("yLevelPreservationEnabled", true);
-
-        BIOME_TEMPERATURE_PRESERVATION_ENABLED = builder
-                .comment("Enable biome temperature based preservation (cold biomes = slower spoilage)")
-                .define("biomeTemperaturePreservationEnabled", true);
-
-        COLD_SWEAT_INTEGRATION_ENABLED = builder
-                .comment("Enable Cold Sweat mod integration for temperature-based preservation (requires Cold Sweat mod)")
-                .define("coldSweatIntegrationEnabled", true);
-
-        builder.comment("Y-Level preservation thresholds and multipliers").push("yLevel");
-
-        Y_LEVEL_DEEP = builder
-                .comment("Y coordinate considered 'deep underground' (maximum preservation)")
-                .defineInRange("yLevelDeep", 0, -64, 320);
-
-        Y_LEVEL_UNDERGROUND = builder
-                .comment("Y coordinate considered 'underground'")
-                .defineInRange("yLevelUnderground", 50, -64, 320);
-
-        Y_LEVEL_SURFACE = builder
-                .comment("Y coordinate at which preservation stops")
-                .defineInRange("yLevelSurface", 63, -64, 320);
-
-        Y_LEVEL_DEEP_MULTIPLIER = builder
-                .comment("Spoilage speed at deep level (0.6 = 40% slower)")
-                .defineInRange("yLevelDeepMultiplier", 0.6, 0.01, 1.0);
-
-        Y_LEVEL_UNDERGROUND_MULTIPLIER = builder
-                .comment("Spoilage speed at underground level (0.8 = 20% slower)")
-                .defineInRange("yLevelUndergroundMultiplier", 0.8, 0.01, 1.0);
-
-        Y_LEVEL_SHALLOW_MULTIPLIER = builder
-                .comment("Spoilage speed at shallow underground (0.9 = 10% slower)")
-                .defineInRange("yLevelShallowMultiplier", 0.9, 0.01, 1.0);
-
-        builder.pop();
-
-        builder.comment("Biome temperature preservation thresholds and multipliers").push("biome");
-
-        BIOME_COLD_THRESHOLD = builder
-                .comment("Biome temperatures below this get cold preservation bonus")
-                .defineInRange("biomeColdThreshold", 0.3, -2.0, 2.0);
-
-        BIOME_HOT_THRESHOLD = builder
-                .comment("Biome temperatures above this get hot spoilage penalty")
-                .defineInRange("biomeHotThreshold", 0.9, -2.0, 2.0);
-
-        BIOME_COLD_MULTIPLIER = builder
-                .comment("Spoilage speed in coldest biomes (0.7 = 30% slower)")
-                .defineInRange("biomeColdMultiplier", 0.7, 0.01, 2.0);
-
-        BIOME_HOT_MULTIPLIER = builder
-                .comment("Spoilage speed in hottest biomes (1.3 = 30% faster)")
-                .defineInRange("biomeHotMultiplier", 1.3, 0.5, 3.0);
-
-        builder.pop();
-
-        builder.pop();
-
-        // gameplay settings
-        builder.comment("Gameplay feature settings").push("gameplay");
-
-        OFFHAND_AUTO_COMBINE_ENABLED = builder
-                .comment("Automatically combine picked up food with same food in offhand (weighted spoilage average)")
-                .define("offhandAutoCombineEnabled", true);
-
-        VILLAGERS_IGNORE_SPOILED = builder
-                .comment("Villagers will not pick up or plant spoiled food")
-                .define("villagersIgnoreSpoiled", true);
-
-        ANIMALS_POISONED_BY_ROTTEN = builder
-                .comment("Animals get poisoned when fed rotten food")
-                .define("animalsPoisonedByRotten", true);
-
-        PREVENT_PLANTING_SPOILED = builder
-                .comment("Prevent planting spoiled seeds and crops")
-                .define("preventPlantingSpoiled", true);
-
-        LOOT_RANDOMIZATION_ENABLED = builder
-                .comment("Enable per-item freshness randomization in loot tables")
-                .define("lootRandomizationEnabled", true);
-
-        CONTAMINATION_ENABLED = builder
-                .comment("Rotten food accelerates spoilage of nearby fresh food in the same inventory")
-                .define("contaminationEnabled", true);
-
-        CONTAMINATION_MULTIPLIER_PER_SLOT = builder
-                .comment("Spoilage speed increase per rotten slot (0.15 = +15% faster per slot)")
-                .defineInRange("contaminationMultiplierPerSlot", 0.15, 0.01, 1.0);
-
-        CONTAMINATION_MAX_MULTIPLIER = builder
-                .comment("Maximum spoilage speed multiplier from food contamination")
-                .defineInRange("contaminationMaxMultiplier", 3.0, 1.0, 10.0);
-
-        CONTAINER_SPOILAGE_RATES = builder
-                .comment("Container spoilage rate multipliers. Format: \"namespace:container;multiplier\"",
-                        "Example: \"minecraft:shulker_box;0.85\" means items in shulker boxes spoil at 85% speed",
-                        "Lower values = slower spoilage. 1.0 = normal rate, 0.5 = half speed, 0.0 = no spoilage",
-                        "Containers not listed here will use normal spoilage rate (1.0)")
-                .defineListAllowEmpty(
-                        "containerSpoilageRates",
-                        List.of("minecraft:shulker_box;0.85", "minecraft:barrel;0.9", "minecraft:chest;0.95"),
-                        () -> "minecraft:chest;1.0",
-                        obj -> obj instanceof String && ((String) obj).contains(";")
-                );
-
-        builder.pop();
-
-        // crop lifecycle settings
-        builder.comment("Crop lifecycle settings - controls how crops grow, ripen, and rot").push("crops");
-
-        CROP_FRESH_PERIOD_TICKS = builder
-                .comment("How long fully grown crops stay 100% fresh (in ticks)",
-                        "Default: 72000 (1 hour real time = 3 Minecraft days)")
-                .defineInRange("cropFreshPeriodTicks", 72000, 0, 1728000);
-
-        CROP_ROT_PERIOD_TICKS = builder
-                .comment("How long it takes for a crop to fully rot after the fresh period ends (in ticks)",
-                        "During this time, crops will regress through growth stages",
-                        "Default: 48000 (40 minutes real time = 2 Minecraft days)")
-                .defineInRange("cropRotPeriodTicks", 48000, 1, 1728000);
-
-        CROP_MINIMUM_HARVEST_STAGE = builder
-                .comment("Crops harvested at or below this growth stage are considered inedible (100% spoiled)",
-                        "Default: 1 (stage 0-1 = inedible)")
-                .defineInRange("cropMinimumHarvestStage", 1, 0, 7);
-
-        BONEMEAL_RESETS_ROT = builder
-                .comment("When bonemeal is used on a rotting crop, reset the fresh timer",
-                        "This allows players to save crops that have started to rot")
-                .define("bonemealResetsRot", true);
-
-        BONEMEAL_BLOCKED_ON_ROTTEN = builder
-                .comment("Block bone meal from having any effect on rotten crops",
-                        "When enabled, bone meal cannot grow or reset crops that are currently rotting",
-                        "When disabled, vanilla bone meal can still grow stages on rotten crops")
-                .define("bonemealBlockedOnRotten", true);
-
-        STALE_SEED_GROWTH_PENALTY = builder
-                .comment("Crops planted from stale seeds freeze at their current growth stage",
-                        "until the seed's freshness fully recovers to 0% spoilage")
-                .define("staleSeedGrowthPenalty", true);
-
-        STALE_SEED_RECOVERY_TICKS = builder
-                .comment("Ticks for a 100% spoiled seed to fully recover (proportional for partial spoilage)",
-                        "Default: 48000 (2 Minecraft days for full recovery)")
-                .defineInRange("staleSeedRecoveryTicks", 48000, 1, 1728000);
-
-        builder.pop();
-
-        // tooltip settings
-        builder.comment("Tooltip display settings").push("tooltip");
-
-        SHOW_REMAINING_TIME = builder
-                .comment("Show remaining time until fully spoiled in tooltip")
-                .define("showRemainingTime", true);
-
-        SHOW_FRESHNESS_WORD = builder
-                .comment("Show freshness label (Fresh, Stale, Spoiled, etc) in tooltip")
-                .define("showFreshnessWord", true);
-
-        SHOW_FRESHNESS_PERCENTAGE = builder
-                .comment("Show freshness as percentage in tooltip")
-                .define("showFreshnessPercentage", false);
-
-        builder.pop();
-
-        // visual settings
-        builder.comment("Visual feedback settings").push("visual");
-
-        SHOW_TINT_OVERLAY = builder
-                .comment("Show color tint overlay on spoiling items (fallback when no rotten texture available)")
-                .define("showTintOverlay", true);
-
-        TINT_STYLE_ROTTEN = builder
-                .comment("Tint style: false = warning colors (yellow -> red), true = rotten colors (green/brown decay)")
-                .define("tintStyleRotten", true);
-
-        USE_TEXTURE_BLENDING = builder
-                .comment("Enable texture blending system for items with rotten textures")
-                .define("useTextureBlending", true);
-
-        BLEND_START_THRESHOLD = builder
-                .comment("Default spoilage percentage when texture blending begins (0.0-1.0)")
-                .defineInRange("blendStartThreshold", 0.2, 0.0, 1.0);
-
-        BLEND_FULL_THRESHOLD = builder
-                .comment("Default spoilage percentage when item is fully rotten (0.0-1.0)")
-                .defineInRange("blendFullThreshold", 1.0, 0.0, 1.0);
-
-        builder.pop();
-
-        SPEC = builder.build();
+        INSTANCE.validate();
+        save();
     }
+
+    // saves current config to disk
+    public static void save() {
+        if (INSTANCE == null) return;
+        Path configPath = PlatformHelper.getConfigDir().resolve(CONFIG_FILE);
+
+        try {
+            Files.createDirectories(configPath.getParent());
+            try (Writer writer = Files.newBufferedWriter(configPath)) {
+                GSON.toJson(INSTANCE.serialize(), writer);
+            }
+        } catch (IOException e) {
+            LOGGER.error("failed to save spoilage config: {}", e.getMessage());
+        }
+    }
+
+    // gets the config instance, loading if needed
+    private static SpoilageConfig get() {
+        if (INSTANCE == null) {
+            load();
+        }
+        return INSTANCE;
+    }
+
+    private void validate() {
+        globalSpeedMultiplier = clamp(globalSpeedMultiplier, 0.01, 100.0);
+        checkIntervalTicks = clamp(checkIntervalTicks, 1, 12000);
+
+        yLevelDeep = clamp(yLevelDeep, -64, 320);
+        yLevelUnderground = clamp(yLevelUnderground, -64, 320);
+        yLevelSurface = clamp(yLevelSurface, -64, 320);
+        yLevelDeepMultiplier = clamp(yLevelDeepMultiplier, 0.01, 1.0);
+        yLevelUndergroundMultiplier = clamp(yLevelUndergroundMultiplier, 0.01, 1.0);
+        yLevelShallowMultiplier = clamp(yLevelShallowMultiplier, 0.01, 1.0);
+
+        biomeColdThreshold = clamp(biomeColdThreshold, -2.0, 2.0);
+        biomeHotThreshold = clamp(biomeHotThreshold, -2.0, 2.0);
+        biomeColdMultiplier = clamp(biomeColdMultiplier, 0.01, 2.0);
+        biomeHotMultiplier = clamp(biomeHotMultiplier, 0.5, 3.0);
+
+        contaminationMultiplierPerSlot = clamp(contaminationMultiplierPerSlot, 0.01, 1.0);
+        contaminationMaxMultiplier = clamp(contaminationMaxMultiplier, 1.0, 10.0);
+
+        cropFreshPeriodTicks = clamp(cropFreshPeriodTicks, 0, 1728000);
+        cropRotPeriodTicks = clamp(cropRotPeriodTicks, 1, 1728000);
+        cropMinimumHarvestStage = clamp(cropMinimumHarvestStage, 0, 7);
+        staleSeedRecoveryTicks = clamp(staleSeedRecoveryTicks, 1, 1728000);
+
+        blendStartThreshold = clamp(blendStartThreshold, 0.0, 1.0);
+        blendFullThreshold = clamp(blendFullThreshold, 0.0, 1.0);
+    }
+
+    private JsonObject serialize() {
+        JsonObject root = new JsonObject();
+
+        // general
+        JsonObject general = new JsonObject();
+        general.addProperty("enabled", enabled);
+        general.addProperty("globalSpeedMultiplier", globalSpeedMultiplier);
+        general.addProperty("checkIntervalTicks", checkIntervalTicks);
+        root.add("general", general);
+
+        // preservation
+        JsonObject preservation = new JsonObject();
+        preservation.addProperty("yLevelPreservationEnabled", yLevelPreservationEnabled);
+        preservation.addProperty("biomeTemperaturePreservationEnabled", biomeTemperaturePreservationEnabled);
+        preservation.addProperty("coldSweatIntegrationEnabled", coldSweatIntegrationEnabled);
+
+        JsonObject yLevel = new JsonObject();
+        yLevel.addProperty("yLevelDeep", yLevelDeep);
+        yLevel.addProperty("yLevelUnderground", yLevelUnderground);
+        yLevel.addProperty("yLevelSurface", yLevelSurface);
+        yLevel.addProperty("yLevelDeepMultiplier", yLevelDeepMultiplier);
+        yLevel.addProperty("yLevelUndergroundMultiplier", yLevelUndergroundMultiplier);
+        yLevel.addProperty("yLevelShallowMultiplier", yLevelShallowMultiplier);
+        preservation.add("yLevel", yLevel);
+
+        JsonObject biome = new JsonObject();
+        biome.addProperty("biomeColdThreshold", biomeColdThreshold);
+        biome.addProperty("biomeHotThreshold", biomeHotThreshold);
+        biome.addProperty("biomeColdMultiplier", biomeColdMultiplier);
+        biome.addProperty("biomeHotMultiplier", biomeHotMultiplier);
+        preservation.add("biome", biome);
+
+        root.add("preservation", preservation);
+
+        // gameplay
+        JsonObject gameplay = new JsonObject();
+        gameplay.addProperty("offhandAutoCombineEnabled", offhandAutoCombineEnabled);
+        gameplay.addProperty("villagersIgnoreSpoiled", villagersIgnoreSpoiled);
+        gameplay.addProperty("animalsPoisonedByRotten", animalsPoisonedByRotten);
+        gameplay.addProperty("preventPlantingSpoiled", preventPlantingSpoiled);
+        gameplay.addProperty("lootRandomizationEnabled", lootRandomizationEnabled);
+        gameplay.addProperty("contaminationEnabled", contaminationEnabled);
+        gameplay.addProperty("contaminationMultiplierPerSlot", contaminationMultiplierPerSlot);
+        gameplay.addProperty("contaminationMaxMultiplier", contaminationMaxMultiplier);
+
+        JsonArray rates = new JsonArray();
+        for (String rate : containerSpoilageRates) {
+            rates.add(rate);
+        }
+        gameplay.add("containerSpoilageRates", rates);
+
+        root.add("gameplay", gameplay);
+
+        // crops
+        JsonObject crops = new JsonObject();
+        crops.addProperty("cropFreshPeriodTicks", cropFreshPeriodTicks);
+        crops.addProperty("cropRotPeriodTicks", cropRotPeriodTicks);
+        crops.addProperty("cropMinimumHarvestStage", cropMinimumHarvestStage);
+        crops.addProperty("bonemealResetsRot", bonemealResetsRot);
+        crops.addProperty("bonemealBlockedOnRotten", bonemealBlockedOnRotten);
+        crops.addProperty("staleSeedGrowthPenalty", staleSeedGrowthPenalty);
+        crops.addProperty("staleSeedRecoveryTicks", staleSeedRecoveryTicks);
+        root.add("crops", crops);
+
+        // tooltip
+        JsonObject tooltip = new JsonObject();
+        tooltip.addProperty("showRemainingTime", showRemainingTime);
+        tooltip.addProperty("showFreshnessWord", showFreshnessWord);
+        tooltip.addProperty("showFreshnessPercentage", showFreshnessPercentage);
+        root.add("tooltip", tooltip);
+
+        // visual
+        JsonObject visual = new JsonObject();
+        visual.addProperty("showTintOverlay", showTintOverlay);
+        visual.addProperty("tintStyleRotten", tintStyleRotten);
+        visual.addProperty("useTextureBlending", useTextureBlending);
+        visual.addProperty("blendStartThreshold", blendStartThreshold);
+        visual.addProperty("blendFullThreshold", blendFullThreshold);
+        root.add("visual", visual);
+
+        return root;
+    }
+
+    private void deserialize(JsonObject root) {
+        // general
+        JsonObject general = getObject(root, "general");
+        if (general != null) {
+            enabled = getBool(general, "enabled", enabled);
+            globalSpeedMultiplier = getDouble(general, "globalSpeedMultiplier", globalSpeedMultiplier);
+            checkIntervalTicks = getInt(general, "checkIntervalTicks", checkIntervalTicks);
+        }
+
+        // preservation
+        JsonObject preservation = getObject(root, "preservation");
+        if (preservation != null) {
+            yLevelPreservationEnabled = getBool(preservation, "yLevelPreservationEnabled", yLevelPreservationEnabled);
+            biomeTemperaturePreservationEnabled = getBool(preservation, "biomeTemperaturePreservationEnabled", biomeTemperaturePreservationEnabled);
+            coldSweatIntegrationEnabled = getBool(preservation, "coldSweatIntegrationEnabled", coldSweatIntegrationEnabled);
+
+            JsonObject yLevelObj = getObject(preservation, "yLevel");
+            if (yLevelObj != null) {
+                yLevelDeep = getInt(yLevelObj, "yLevelDeep", yLevelDeep);
+                yLevelUnderground = getInt(yLevelObj, "yLevelUnderground", yLevelUnderground);
+                yLevelSurface = getInt(yLevelObj, "yLevelSurface", yLevelSurface);
+                yLevelDeepMultiplier = getDouble(yLevelObj, "yLevelDeepMultiplier", yLevelDeepMultiplier);
+                yLevelUndergroundMultiplier = getDouble(yLevelObj, "yLevelUndergroundMultiplier", yLevelUndergroundMultiplier);
+                yLevelShallowMultiplier = getDouble(yLevelObj, "yLevelShallowMultiplier", yLevelShallowMultiplier);
+            }
+
+            JsonObject biomeObj = getObject(preservation, "biome");
+            if (biomeObj != null) {
+                biomeColdThreshold = getDouble(biomeObj, "biomeColdThreshold", biomeColdThreshold);
+                biomeHotThreshold = getDouble(biomeObj, "biomeHotThreshold", biomeHotThreshold);
+                biomeColdMultiplier = getDouble(biomeObj, "biomeColdMultiplier", biomeColdMultiplier);
+                biomeHotMultiplier = getDouble(biomeObj, "biomeHotMultiplier", biomeHotMultiplier);
+            }
+        }
+
+        // gameplay
+        JsonObject gameplay = getObject(root, "gameplay");
+        if (gameplay != null) {
+            offhandAutoCombineEnabled = getBool(gameplay, "offhandAutoCombineEnabled", offhandAutoCombineEnabled);
+            villagersIgnoreSpoiled = getBool(gameplay, "villagersIgnoreSpoiled", villagersIgnoreSpoiled);
+            animalsPoisonedByRotten = getBool(gameplay, "animalsPoisonedByRotten", animalsPoisonedByRotten);
+            preventPlantingSpoiled = getBool(gameplay, "preventPlantingSpoiled", preventPlantingSpoiled);
+            lootRandomizationEnabled = getBool(gameplay, "lootRandomizationEnabled", lootRandomizationEnabled);
+            contaminationEnabled = getBool(gameplay, "contaminationEnabled", contaminationEnabled);
+            contaminationMultiplierPerSlot = getDouble(gameplay, "contaminationMultiplierPerSlot", contaminationMultiplierPerSlot);
+            contaminationMaxMultiplier = getDouble(gameplay, "contaminationMaxMultiplier", contaminationMaxMultiplier);
+
+            if (gameplay.has("containerSpoilageRates") && gameplay.get("containerSpoilageRates").isJsonArray()) {
+                containerSpoilageRates = new ArrayList<>();
+                for (JsonElement element : gameplay.getAsJsonArray("containerSpoilageRates")) {
+                    if (element.isJsonPrimitive()) {
+                        containerSpoilageRates.add(element.getAsString());
+                    }
+                }
+            }
+        }
+
+        // crops
+        JsonObject crops = getObject(root, "crops");
+        if (crops != null) {
+            cropFreshPeriodTicks = getInt(crops, "cropFreshPeriodTicks", cropFreshPeriodTicks);
+            cropRotPeriodTicks = getInt(crops, "cropRotPeriodTicks", cropRotPeriodTicks);
+            cropMinimumHarvestStage = getInt(crops, "cropMinimumHarvestStage", cropMinimumHarvestStage);
+            bonemealResetsRot = getBool(crops, "bonemealResetsRot", bonemealResetsRot);
+            bonemealBlockedOnRotten = getBool(crops, "bonemealBlockedOnRotten", bonemealBlockedOnRotten);
+            staleSeedGrowthPenalty = getBool(crops, "staleSeedGrowthPenalty", staleSeedGrowthPenalty);
+            staleSeedRecoveryTicks = getInt(crops, "staleSeedRecoveryTicks", staleSeedRecoveryTicks);
+        }
+
+        // tooltip
+        JsonObject tooltip = getObject(root, "tooltip");
+        if (tooltip != null) {
+            showRemainingTime = getBool(tooltip, "showRemainingTime", showRemainingTime);
+            showFreshnessWord = getBool(tooltip, "showFreshnessWord", showFreshnessWord);
+            showFreshnessPercentage = getBool(tooltip, "showFreshnessPercentage", showFreshnessPercentage);
+        }
+
+        // visual
+        JsonObject visual = getObject(root, "visual");
+        if (visual != null) {
+            showTintOverlay = getBool(visual, "showTintOverlay", showTintOverlay);
+            tintStyleRotten = getBool(visual, "tintStyleRotten", tintStyleRotten);
+            useTextureBlending = getBool(visual, "useTextureBlending", useTextureBlending);
+            blendStartThreshold = getDouble(visual, "blendStartThreshold", blendStartThreshold);
+            blendFullThreshold = getDouble(visual, "blendFullThreshold", blendFullThreshold);
+        }
+    }
+
+    // STATIC GETTERS (API surface stays identical)
 
     // general getters
-    public static boolean isEnabled() {
-        return ENABLED.get();
-    }
-
-    public static double getGlobalSpeedMultiplier() {
-        return GLOBAL_SPEED_MULTIPLIER.get();
-    }
-
-    public static int getCheckIntervalTicks() {
-        return CHECK_INTERVAL_TICKS.get();
-    }
+    public static boolean isEnabled() { return get().enabled; }
+    public static double getGlobalSpeedMultiplier() { return get().globalSpeedMultiplier; }
+    public static int getCheckIntervalTicks() { return get().checkIntervalTicks; }
 
     // preservation getters
-    public static boolean isYLevelPreservationEnabled() {
-        return Y_LEVEL_PRESERVATION_ENABLED.get();
-    }
-
-    public static boolean isBiomeTemperaturePreservationEnabled() {
-        return BIOME_TEMPERATURE_PRESERVATION_ENABLED.get();
-    }
-
-    public static boolean isColdSweatIntegrationEnabled() {
-        return COLD_SWEAT_INTEGRATION_ENABLED.get();
-    }
+    public static boolean isYLevelPreservationEnabled() { return get().yLevelPreservationEnabled; }
+    public static boolean isBiomeTemperaturePreservationEnabled() { return get().biomeTemperaturePreservationEnabled; }
+    public static boolean isColdSweatIntegrationEnabled() { return get().coldSweatIntegrationEnabled; }
 
     // Y-level preservation getters
-    public static int getYLevelDeep() {
-        return Y_LEVEL_DEEP.get();
-    }
-
-    public static int getYLevelUnderground() {
-        return Y_LEVEL_UNDERGROUND.get();
-    }
-
-    public static int getYLevelSurface() {
-        return Y_LEVEL_SURFACE.get();
-    }
-
-    public static float getYLevelDeepMultiplier() {
-        return Y_LEVEL_DEEP_MULTIPLIER.get().floatValue();
-    }
-
-    public static float getYLevelUndergroundMultiplier() {
-        return Y_LEVEL_UNDERGROUND_MULTIPLIER.get().floatValue();
-    }
-
-    public static float getYLevelShallowMultiplier() {
-        return Y_LEVEL_SHALLOW_MULTIPLIER.get().floatValue();
-    }
+    public static int getYLevelDeep() { return get().yLevelDeep; }
+    public static int getYLevelUnderground() { return get().yLevelUnderground; }
+    public static int getYLevelSurface() { return get().yLevelSurface; }
+    public static float getYLevelDeepMultiplier() { return (float) get().yLevelDeepMultiplier; }
+    public static float getYLevelUndergroundMultiplier() { return (float) get().yLevelUndergroundMultiplier; }
+    public static float getYLevelShallowMultiplier() { return (float) get().yLevelShallowMultiplier; }
 
     // biome preservation getters
-    public static float getBiomeColdThreshold() {
-        return BIOME_COLD_THRESHOLD.get().floatValue();
-    }
-
-    public static float getBiomeHotThreshold() {
-        return BIOME_HOT_THRESHOLD.get().floatValue();
-    }
-
-    public static float getBiomeColdMultiplier() {
-        return BIOME_COLD_MULTIPLIER.get().floatValue();
-    }
-
-    public static float getBiomeHotMultiplier() {
-        return BIOME_HOT_MULTIPLIER.get().floatValue();
-    }
+    public static float getBiomeColdThreshold() { return (float) get().biomeColdThreshold; }
+    public static float getBiomeHotThreshold() { return (float) get().biomeHotThreshold; }
+    public static float getBiomeColdMultiplier() { return (float) get().biomeColdMultiplier; }
+    public static float getBiomeHotMultiplier() { return (float) get().biomeHotMultiplier; }
 
     // gameplay getters
-    public static boolean isOffhandAutoCombineEnabled() {
-        return OFFHAND_AUTO_COMBINE_ENABLED.get();
-    }
-
-    public static boolean doVillagersIgnoreSpoiled() {
-        return VILLAGERS_IGNORE_SPOILED.get();
-    }
-
-    public static boolean areAnimalsPoisonedByRotten() {
-        return ANIMALS_POISONED_BY_ROTTEN.get();
-    }
-
-    public static boolean isPreventPlantingSpoiledEnabled() {
-        return PREVENT_PLANTING_SPOILED.get();
-    }
-
-    public static boolean isLootRandomizationEnabled() {
-        return LOOT_RANDOMIZATION_ENABLED.get();
-    }
-
-    public static boolean isContaminationEnabled() {
-        return CONTAMINATION_ENABLED.get();
-    }
-
-    public static float getContaminationMultiplierPerSlot() {
-        return CONTAMINATION_MULTIPLIER_PER_SLOT.get().floatValue();
-    }
-
-    public static float getContaminationMaxMultiplier() {
-        return CONTAMINATION_MAX_MULTIPLIER.get().floatValue();
-    }
+    public static boolean isOffhandAutoCombineEnabled() { return get().offhandAutoCombineEnabled; }
+    public static boolean doVillagersIgnoreSpoiled() { return get().villagersIgnoreSpoiled; }
+    public static boolean areAnimalsPoisonedByRotten() { return get().animalsPoisonedByRotten; }
+    public static boolean isPreventPlantingSpoiledEnabled() { return get().preventPlantingSpoiled; }
+    public static boolean isLootRandomizationEnabled() { return get().lootRandomizationEnabled; }
+    public static boolean isContaminationEnabled() { return get().contaminationEnabled; }
+    public static float getContaminationMultiplierPerSlot() { return (float) get().contaminationMultiplierPerSlot; }
+    public static float getContaminationMaxMultiplier() { return (float) get().contaminationMaxMultiplier; }
 
     // container getters
-    public static List<? extends String> getContainerSpoilageRates() {
-        return CONTAINER_SPOILAGE_RATES.get();
-    }
+    public static List<String> getContainerSpoilageRates() { return List.copyOf(get().containerSpoilageRates); }
 
     // tooltip getters
-    public static boolean showRemainingTime() {
-        return SHOW_REMAINING_TIME.get();
-    }
-
-    public static boolean showFreshnessWord() {
-        return SHOW_FRESHNESS_WORD.get();
-    }
-
-    public static boolean showFreshnessPercentage() {
-        return SHOW_FRESHNESS_PERCENTAGE.get();
-    }
+    public static boolean showRemainingTime() { return get().showRemainingTime; }
+    public static boolean showFreshnessWord() { return get().showFreshnessWord; }
+    public static boolean showFreshnessPercentage() { return get().showFreshnessPercentage; }
 
     // visual getters
-    public static boolean showTintOverlay() {
-        return SHOW_TINT_OVERLAY.get();
-    }
-
-    public static boolean tintStyleRotten() {
-        return TINT_STYLE_ROTTEN.get();
-    }
-
-    public static boolean useTextureBlending() {
-        return USE_TEXTURE_BLENDING.get();
-    }
-
-    public static double getBlendStartThreshold() {
-        return BLEND_START_THRESHOLD.get();
-    }
-
-    public static double getBlendFullThreshold() {
-        return BLEND_FULL_THRESHOLD.get();
-    }
+    public static boolean showTintOverlay() { return get().showTintOverlay; }
+    public static boolean tintStyleRotten() { return get().tintStyleRotten; }
+    public static boolean useTextureBlending() { return get().useTextureBlending; }
+    public static double getBlendStartThreshold() { return get().blendStartThreshold; }
+    public static double getBlendFullThreshold() { return get().blendFullThreshold; }
 
     // crop lifecycle getters
-    public static int getCropFreshPeriodTicks() {
-        return CROP_FRESH_PERIOD_TICKS.get();
+    public static int getCropFreshPeriodTicks() { return get().cropFreshPeriodTicks; }
+    public static int getCropRotPeriodTicks() { return get().cropRotPeriodTicks; }
+    public static int getCropMinimumHarvestStage() { return get().cropMinimumHarvestStage; }
+    public static boolean doesBonemealResetRot() { return get().bonemealResetsRot; }
+    public static boolean isBonemealBlockedOnRotten() { return get().bonemealBlockedOnRotten; }
+    public static boolean isStaleSeedGrowthPenaltyEnabled() { return get().staleSeedGrowthPenalty; }
+    public static int getStaleSeedRecoveryTicks() { return get().staleSeedRecoveryTicks; }
+
+    // MUTABLE INSTANCE ACCESS FOR CONFIG SCREEN
+
+    // gets the mutable config instance for use by config screens
+    public static SpoilageConfig getInstance() { return get(); }
+
+    // setters for config screen
+    public void setEnabled(boolean v) { enabled = v; }
+    public void setGlobalSpeedMultiplier(double v) { globalSpeedMultiplier = v; }
+    public void setCheckIntervalTicks(int v) { checkIntervalTicks = v; }
+    public void setShowRemainingTime(boolean v) { showRemainingTime = v; }
+    public void setShowFreshnessWord(boolean v) { showFreshnessWord = v; }
+    public void setShowFreshnessPercentage(boolean v) { showFreshnessPercentage = v; }
+    public void setShowTintOverlay(boolean v) { showTintOverlay = v; }
+    public void setTintStyleRotten(boolean v) { tintStyleRotten = v; }
+    public void setUseTextureBlending(boolean v) { useTextureBlending = v; }
+    public void setBlendStartThreshold(double v) { blendStartThreshold = v; }
+    public void setBlendFullThreshold(double v) { blendFullThreshold = v; }
+    public void setYLevelPreservationEnabled(boolean v) { yLevelPreservationEnabled = v; }
+    public void setBiomeTemperaturePreservationEnabled(boolean v) { biomeTemperaturePreservationEnabled = v; }
+    public void setColdSweatIntegrationEnabled(boolean v) { coldSweatIntegrationEnabled = v; }
+    public void setYLevelDeep(int v) { yLevelDeep = v; }
+    public void setYLevelUnderground(int v) { yLevelUnderground = v; }
+    public void setYLevelSurface(int v) { yLevelSurface = v; }
+    public void setYLevelDeepMultiplier(double v) { yLevelDeepMultiplier = v; }
+    public void setYLevelUndergroundMultiplier(double v) { yLevelUndergroundMultiplier = v; }
+    public void setYLevelShallowMultiplier(double v) { yLevelShallowMultiplier = v; }
+    public void setBiomeColdThreshold(double v) { biomeColdThreshold = v; }
+    public void setBiomeHotThreshold(double v) { biomeHotThreshold = v; }
+    public void setBiomeColdMultiplier(double v) { biomeColdMultiplier = v; }
+    public void setBiomeHotMultiplier(double v) { biomeHotMultiplier = v; }
+    public void setOffhandAutoCombineEnabled(boolean v) { offhandAutoCombineEnabled = v; }
+    public void setVillagersIgnoreSpoiled(boolean v) { villagersIgnoreSpoiled = v; }
+    public void setAnimalsPoisonedByRotten(boolean v) { animalsPoisonedByRotten = v; }
+    public void setPreventPlantingSpoiled(boolean v) { preventPlantingSpoiled = v; }
+    public void setLootRandomizationEnabled(boolean v) { lootRandomizationEnabled = v; }
+    public void setContaminationEnabled(boolean v) { contaminationEnabled = v; }
+    public void setContaminationMultiplierPerSlot(double v) { contaminationMultiplierPerSlot = v; }
+    public void setContaminationMaxMultiplier(double v) { contaminationMaxMultiplier = v; }
+    public void setCropFreshPeriodTicks(int v) { cropFreshPeriodTicks = v; }
+    public void setCropRotPeriodTicks(int v) { cropRotPeriodTicks = v; }
+    public void setCropMinimumHarvestStage(int v) { cropMinimumHarvestStage = v; }
+    public void setBonemealResetsRot(boolean v) { bonemealResetsRot = v; }
+    public void setBonemealBlockedOnRotten(boolean v) { bonemealBlockedOnRotten = v; }
+    public void setStaleSeedGrowthPenalty(boolean v) { staleSeedGrowthPenalty = v; }
+    public void setStaleSeedRecoveryTicks(int v) { staleSeedRecoveryTicks = v; }
+
+    // JSON HELPERS
+
+    private static JsonObject getObject(JsonObject parent, String key) {
+        return parent.has(key) && parent.get(key).isJsonObject() ? parent.getAsJsonObject(key) : null;
     }
 
-    public static int getCropRotPeriodTicks() {
-        return CROP_ROT_PERIOD_TICKS.get();
+    private static boolean getBool(JsonObject obj, String key, boolean def) {
+        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsBoolean() : def;
     }
 
-    public static int getCropMinimumHarvestStage() {
-        return CROP_MINIMUM_HARVEST_STAGE.get();
+    private static int getInt(JsonObject obj, String key, int def) {
+        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsInt() : def;
     }
 
-    public static boolean doesBonemealResetRot() {
-        return BONEMEAL_RESETS_ROT.get();
+    private static double getDouble(JsonObject obj, String key, double def) {
+        return obj.has(key) && obj.get(key).isJsonPrimitive() ? obj.get(key).getAsDouble() : def;
     }
 
-    public static boolean isBonemealBlockedOnRotten() {
-        return BONEMEAL_BLOCKED_ON_ROTTEN.get();
+    private static double clamp(double val, double min, double max) {
+        return Math.max(min, Math.min(max, val));
     }
 
-    public static boolean isStaleSeedGrowthPenaltyEnabled() {
-        return STALE_SEED_GROWTH_PENALTY.get();
-    }
-
-    public static int getStaleSeedRecoveryTicks() {
-        return STALE_SEED_RECOVERY_TICKS.get();
+    private static int clamp(int val, int min, int max) {
+        return Math.max(min, Math.min(max, val));
     }
 }

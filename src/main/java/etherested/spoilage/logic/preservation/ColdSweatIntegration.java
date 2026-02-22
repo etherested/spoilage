@@ -2,20 +2,18 @@ package etherested.spoilage.logic.preservation;
 
 import org.slf4j.LoggerFactory;
 import etherested.spoilage.config.SpoilageConfig;
+import etherested.spoilage.platform.PlatformHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.fml.ModList;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
 
-/**
- * soft integration with the Cold Sweat mod for temperature-based preservation;
- * uses reflection to avoid hard dependency on Cold Sweat;
- * when Cold Sweat is available and enabled:
- * - uses Cold Sweat's temperature API for more accurate temperature readings
- * - falls back to vanilla biome temperature if Cold Sweat is unavailable
- */
+// soft integration with the Cold Sweat mod for temperature-based preservation;
+// uses reflection to avoid hard dependency on Cold Sweat;
+// when Cold Sweat is available and enabled:
+//  - uses Cold Sweat's temperature API for more accurate temperature readings
+//  - falls back to vanilla biome temperature if Cold Sweat is unavailable
 public class ColdSweatIntegration implements PreservationProvider {
 
     public static final String ID = "cold_sweat";
@@ -28,17 +26,15 @@ public class ColdSweatIntegration implements PreservationProvider {
     // Fallback provider when Cold Sweat is unavailable
     private static final BiomeTemperatureProvider fallback = new BiomeTemperatureProvider();
 
-    /**
-     * initializes Cold Sweat integration;
-     * should be called during mod initialization
-     */
+    // initializes Cold Sweat integration;
+    // should be called during mod initialization
     public static void init() {
         if (initialized) {
             return;
         }
         initialized = true;
 
-        if (!ModList.get().isLoaded("cold_sweat")) {
+        if (!PlatformHelper.isModLoaded("cold_sweat")) {
             LOGGER.info("Cold Sweat not detected, using vanilla biome temperatures for preservation");
             available = false;
             return;
@@ -63,7 +59,7 @@ public class ColdSweatIntegration implements PreservationProvider {
         }
     }
 
-    /** checks if Cold Sweat integration is available and working */
+    // checks if Cold Sweat integration is available and working
     public static boolean isAvailable() {
         if (!initialized) {
             init();
@@ -95,14 +91,12 @@ public class ColdSweatIntegration implements PreservationProvider {
         return fallback.getMultiplier(level, pos);
     }
 
-    /**
-     * converts Cold Sweat's temperature value to a spoilage multiplier;
-     * Cold Sweat temperatures are typically in Minecraft units where:
-     * - comfortable range is around 0.0
-     * - negative is cold, positive is hot
-     * @param coldSweatTemp the temperature from Cold Sweat
-     * @return the spoilage multiplier
-     */
+    // converts Cold Sweat's temperature value to a spoilage multiplier;
+    // Cold Sweat temperatures are typically in Minecraft units where:
+    // - comfortable range is around 0.0
+    // - negative is cold, positive is hot
+    // @param coldSweatTemp the temperature from Cold Sweat
+    // @return the spoilage multiplier
     private float convertColdSweatTemperature(float coldSweatTemp) {
         // Cold Sweat temperature ranges roughly from -1.0 (freezing) to 1.0 (burning)
         // we map this to our multiplier range

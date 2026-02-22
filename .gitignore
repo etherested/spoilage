@@ -1,10 +1,22 @@
+# Gradle
 .gradle/
-.idea/
 build/
-run/
 gradle/
 gradlew
 gradlew.bat
+
+# IDE
+.idea/
 *.iml
+
+# Runtime
+run/
+
+# Claude
 CLAUDE.md
 .claude/
+
+# Stonecutter
+versions/**/build/
+versions/**/.gradle/
+versions/**/run/

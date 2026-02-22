@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "etherested.spoilage.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BoneMealItemMixin",
+    "BlockDropMixin",
+    "BlockPlaceMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

@@ -1,6 +1,6 @@
 package etherested.spoilage.util;
 
-/** thread-local helper for passing spoilage data to composting logic */
+// thread-local helper for passing spoilage data to composting logic
 public class SpoilageCompostHelper {
     private static final ThreadLocal<Float> CURRENT_SPOILAGE = ThreadLocal.withInitial(() -> 0f);
 
@@ -21,10 +21,8 @@ public class SpoilageCompostHelper {
     private static final float BONUS_FULLY_ROTTEN = 0.30f;
     private static final float BONUS_VERY_SPOILED = 0.15f;
 
-    /**
-     * calculates bonus compost chance for rotten items;
-     * fully rotten items get +30% bonus chance
-     */
+    // calculates bonus compost chance for rotten items;
+    // fully rotten items get +30% bonus chance
     public static float getBonusChance(float spoilage) {
         if (spoilage >= THRESHOLD_FULLY_ROTTEN) {
             return BONUS_FULLY_ROTTEN;

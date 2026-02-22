@@ -22,11 +22,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to apply spoilage textures/tint to block break and crack particles;
- * when breaking a spoiled food block, particles will show the appropriate spoilage texture,
- * or fall back to a tint reflecting the spoilage level
- */
+// mixin to apply spoilage textures/tint to block break and crack particles;
+// when breaking a spoiled food block, particles will show the appropriate spoilage texture,
+// or fall back to a tint reflecting the spoilage level
 @Mixin(TerrainParticle.class)
 public abstract class TerrainParticleMixin extends TextureSheetParticle {
 
@@ -42,7 +40,7 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
     @Final
     private float vo;
 
-    /** replacement sprite for spoilage texture blending; null if not replaced */
+    // replacement sprite for spoilage texture blending; null if not replaced
     @Unique
     private TextureAtlasSprite spoilage$replacementSprite;
 
@@ -50,10 +48,8 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         super(level, x, y, z);
     }
 
-    /**
-     * applies spoilage texture or tint to terrain particles after construction;
-     * injected at the end of the constructor that both destroy() and crack() use
-     */
+    // applies spoilage texture or tint to terrain particles after construction;
+    // injected at the end of the constructor that both destroy() and crack() use
     @Inject(method = "<init>(Lnet/minecraft/client/multiplayer/ClientLevel;DDDDDDLnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/core/BlockPos;)V",
             at = @At("RETURN"))
     private void spoilage$applySpoilageToParticle(ClientLevel level, double x, double y, double z,
@@ -103,10 +99,8 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         spoilage$applyBlockTint(spoilage);
     }
 
-    /**
-     * overrides U0 to use replacement sprite when spoilage texture is active;
-     * this bypasses the inherited sprite field which setSprite may not reliably update
-     */
+    // overrides U0 to use replacement sprite when spoilage texture is active;
+    // this bypasses the inherited sprite field which setSprite may not reliably update
     @Inject(method = "getU0", at = @At("HEAD"), cancellable = true)
     private void spoilage$getU0(CallbackInfoReturnable<Float> cir) {
         if (this.spoilage$replacementSprite != null) {
@@ -114,7 +108,7 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         }
     }
 
-    /** overrides U1 to use replacement sprite */
+    // overrides U1 to use replacement sprite
     @Inject(method = "getU1", at = @At("HEAD"), cancellable = true)
     private void spoilage$getU1(CallbackInfoReturnable<Float> cir) {
         if (this.spoilage$replacementSprite != null) {
@@ -122,7 +116,7 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         }
     }
 
-    /** overrides V0 to use replacement sprite */
+    // overrides V0 to use replacement sprite
     @Inject(method = "getV0", at = @At("HEAD"), cancellable = true)
     private void spoilage$getV0(CallbackInfoReturnable<Float> cir) {
         if (this.spoilage$replacementSprite != null) {
@@ -130,7 +124,7 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         }
     }
 
-    /** overrides V1 to use replacement sprite */
+    // overrides V1 to use replacement sprite
     @Inject(method = "getV1", at = @At("HEAD"), cancellable = true)
     private void spoilage$getV1(CallbackInfoReturnable<Float> cir) {
         if (this.spoilage$replacementSprite != null) {
@@ -149,10 +143,8 @@ public abstract class TerrainParticleMixin extends TextureSheetParticle {
         this.bCol *= tintB;
     }
 
-    /**
-     * calculates rotten-style tint for particles;
-     * makes particles look decayed and moldy
-     */
+    // calculates rotten-style tint for particles;
+    // makes particles look decayed and moldy
     @Unique
     private int spoilage$calculateParticleTint(float spoilage) {
         // normalize spoilage from 0.2-1.0 range to 0-1 range

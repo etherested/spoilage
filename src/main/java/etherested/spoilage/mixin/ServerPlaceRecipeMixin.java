@@ -12,16 +12,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-/**
- * mixin to make recipe book ignore spoilage data when finding matching items;
- * this allows the recipe book to move spoiled items to the crafting grid
- */
+// mixin to make recipe book ignore spoilage data when finding matching items;
+// this allows the recipe book to move spoiled items to the crafting grid
 @Mixin(ServerPlaceRecipe.class)
 public abstract class ServerPlaceRecipeMixin<I, R> {
 
     @Shadow protected Inventory inventory;
 
-    /** redirect the findSlotMatchingUnusedItem call to ignore spoilage components */
+    // redirect the findSlotMatchingUnusedItem call to ignore spoilage components */
     @Redirect(method = "moveItemToGrid",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/entity/player/Inventory;findSlotMatchingUnusedItem(Lnet/minecraft/world/item/ItemStack;)I"))
@@ -49,7 +47,7 @@ public abstract class ServerPlaceRecipeMixin<I, R> {
         return -1;
     }
 
-    /** check if two items match when ignoring spoilage data */
+    // check if two items match when ignoring spoilage data
     private boolean spoilage$itemsMatchIgnoringSpoilage(ItemStack stack, ItemStack pattern) {
         // quick check: same item type
         if (!ItemStack.isSameItem(stack, pattern)) {
@@ -60,8 +58,8 @@ public abstract class ServerPlaceRecipeMixin<I, R> {
         ItemStack stackCopy = stack.copy();
         ItemStack patternCopy = pattern.copy();
 
-        stackCopy.remove(ModDataComponents.SPOILAGE_DATA.get());
-        patternCopy.remove(ModDataComponents.SPOILAGE_DATA.get());
+        stackCopy.remove(ModDataComponents.spoilageData());
+        patternCopy.remove(ModDataComponents.spoilageData());
 
         return ItemStack.isSameItemSameComponents(stackCopy, patternCopy);
     }

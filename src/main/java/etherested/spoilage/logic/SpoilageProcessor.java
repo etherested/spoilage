@@ -13,10 +13,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-/** processes spoilage periodically for player inventories and containers */
+// processes spoilage periodically for player inventories and containers
 public class SpoilageProcessor {
 
-    /** process spoilage for a player's inventory */
+    // process spoilage for a player's inventory
     public static void processPlayerInventory(ServerPlayer player) {
         if (!SpoilageConfig.isEnabled()) {
             return;
@@ -52,7 +52,7 @@ public class SpoilageProcessor {
         }
     }
 
-    /** process spoilage for a container (inventory, chest, etc.) */
+    // process spoilage for a container (inventory, chest, etc.)
     public static void processContainer(Container container, long worldTime, Level level) {
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
@@ -73,10 +73,8 @@ public class SpoilageProcessor {
         }
     }
 
-    /**
-     * clears the container Y-level multiplier if the item appears to have left a container;
-     * this is detected by checking if the last Y-level processing was more than 2x the check interval ago
-     */
+    // clears the container Y-level multiplier if the item appears to have left a container;
+    // this is detected by checking if the last Y-level processing was more than 2x the check interval ago
     private static void clearContainerYMultiplierIfNeeded(ItemStack stack, long worldTime) {
         SpoilageData data = SpoilageCalculator.getInitializedData(stack);
         if (data == null) {
@@ -92,14 +90,12 @@ public class SpoilageProcessor {
         long ticksSince = worldTime - data.lastYLevelProcessTick();
         if (ticksSince > SpoilageConfig.getCheckIntervalTicks() * 2) {
             // item has left the container - reset multiplier immediately
-            stack.set(ModDataComponents.SPOILAGE_DATA.get(), data.clearContainerYMultiplier());
+            stack.set(ModDataComponents.spoilageData(), data.clearContainerYMultiplier());
         }
     }
 
-    /**
-     * applies food contamination penalty as negative savings;
-     * skips items already at rotten/inedible tier (80%+ spoilage)
-     */
+    // applies food contamination penalty as negative savings;
+    // skips items already at rotten/inedible tier (80%+ spoilage)
     private static void applyContaminationPenalty(ItemStack stack, float rottenMultiplier, long worldTime) {
         SpoilageData data = SpoilageCalculator.getInitializedData(stack);
         if (data == null || data.isPaused()) return;
@@ -111,7 +107,7 @@ public class SpoilageProcessor {
         // negative savings = checkInterval * (1.0 - multiplier) where multiplier > 1.0
         long negativeSavings = (long) (SpoilageConfig.getCheckIntervalTicks() * (1.0f - rottenMultiplier));
 
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), new SpoilageData(
+        stack.set(ModDataComponents.spoilageData(), new SpoilageData(
                 data.creationTime(), data.remainingLifetime(), data.isPaused(),
                 data.preservationMultiplier(),
                 data.yLevelSavedTicks() + negativeSavings,
@@ -121,12 +117,10 @@ public class SpoilageProcessor {
         ));
     }
 
-    /**
-     * checks if a fully spoiled item should be replaced with another item
-     * @param stack the item stack to check
-     * @param worldTime current world time
-     * @return the replacement ItemStack, or null if no replacement needed
-     */
+    // checks if a fully spoiled item should be replaced with another item
+    // @param stack the item stack to check
+    // @param worldTime current world time
+    // @return the replacement ItemStack, or null if no replacement needed
     public static ItemStack checkRottenReplacement(ItemStack stack, long worldTime) {
         if (stack.isEmpty() || !SpoilageCalculator.isSpoilable(stack)) {
             return null;
@@ -157,11 +151,9 @@ public class SpoilageProcessor {
         return replacement;
     }
 
-    /**
-     * process a single item stack;
-     * items stay at 100% spoilage when fully spoiled;
-     * (no transformation - negative effects are applied when eaten instead)
-     */
+    // process a single item stack;
+    // items stay at 100% spoilage when fully spoiled;
+    // (no transformation - negative effects are applied when eaten instead)
     public static void processStack(ItemStack stack, long worldTime, Level level) {
         if (stack.isEmpty() || !SpoilageCalculator.isSpoilable(stack)) {
             return;
@@ -173,7 +165,7 @@ public class SpoilageProcessor {
         }
     }
 
-    /** pause spoilage for items in a preservation container */
+    // pause spoilage for items in a preservation container
     public static void pauseSpoilage(ItemStack stack, long worldTime) {
         if (!SpoilageCalculator.isSpoilable(stack)) {
             return;
@@ -185,16 +177,16 @@ public class SpoilageProcessor {
         }
 
         long remaining = SpoilageCalculator.getRemainingTicks(stack, worldTime);
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), data.pause(remaining));
+        stack.set(ModDataComponents.spoilageData(), data.pause(remaining));
     }
 
-    /** resume spoilage for items removed from preservation */
+    // resume spoilage for items removed from preservation
     public static void resumeSpoilage(ItemStack stack, long worldTime) {
         if (!SpoilageCalculator.isSpoilable(stack)) {
             return;
         }
 
-        SpoilageData data = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData data = stack.get(ModDataComponents.spoilageData());
         if (data == null || !data.isPaused()) {
             return;
         }
@@ -204,19 +196,19 @@ public class SpoilageProcessor {
         long elapsed = lifetime - remaining;
         long newCreationTime = worldTime - (long)(elapsed / (data.preservationMultiplier() * SpoilageConfig.getGlobalSpeedMultiplier()));
 
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), data.resume(newCreationTime));
+        stack.set(ModDataComponents.spoilageData(), data.resume(newCreationTime));
     }
 
-    /** apply preservation multiplier to items in special containers */
+    // apply preservation multiplier to items in special containers
     public static void applyPreservationMultiplier(ItemStack stack, float multiplier, long worldTime) {
         if (!SpoilageCalculator.isSpoilable(stack)) {
             return;
         }
 
-        SpoilageData data = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData data = stack.get(ModDataComponents.spoilageData());
         if (data == null) {
             SpoilageCalculator.initializeSpoilage(stack, worldTime);
-            data = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+            data = stack.get(ModDataComponents.spoilageData());
         }
 
         if (data != null && Math.abs(data.preservationMultiplier() - multiplier) > 0.001f) {
@@ -226,7 +218,7 @@ public class SpoilageProcessor {
             long effectiveElapsed = (long)(lifetime * currentSpoilage);
             long newCreationTime = worldTime - (long)(effectiveElapsed / (multiplier * SpoilageConfig.getGlobalSpeedMultiplier()));
 
-            stack.set(ModDataComponents.SPOILAGE_DATA.get(), new SpoilageData(
+            stack.set(ModDataComponents.spoilageData(), new SpoilageData(
                     newCreationTime,
                     data.remainingLifetime(),
                     data.isPaused(),
@@ -239,7 +231,7 @@ public class SpoilageProcessor {
         }
     }
 
-    /** process all items for a player when they log in (resume paused spoilage) */
+    // process all items for a player when they log in (resume paused spoilage)
     public static void onPlayerLogin(ServerPlayer player) {
         if (!SpoilageConfig.isEnabled()) {
             return;
@@ -251,7 +243,7 @@ public class SpoilageProcessor {
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
             if (!stack.isEmpty() && SpoilageCalculator.isSpoilable(stack)) {
-                SpoilageData data = stack.get(ModDataComponents.SPOILAGE_DATA.get());
+                SpoilageData data = stack.get(ModDataComponents.spoilageData());
                 if (data != null && data.isPaused()) {
                     resumeSpoilage(stack, worldTime);
                 }
@@ -259,7 +251,7 @@ public class SpoilageProcessor {
         }
     }
 
-    /** process all items for a player when they log out (pause spoilage) */
+    // process all items for a player when they log out (pause spoilage)
     public static void onPlayerLogout(ServerPlayer player) {
         if (!SpoilageConfig.isEnabled()) {
             return;

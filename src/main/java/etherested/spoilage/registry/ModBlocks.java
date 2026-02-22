@@ -1,6 +1,8 @@
 package etherested.spoilage.registry;
 
 import etherested.spoilage.Spoilage;
+
+//? if neoforge {
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -16,3 +18,10 @@ public class ModBlocks {
         BLOCK_ENTITIES.register(modEventBus);
     }
 }
+//?} else {
+/*public class ModBlocks {
+    public static void register() {
+        // no blocks or block entities to register currently
+    }
+}
+*///?}

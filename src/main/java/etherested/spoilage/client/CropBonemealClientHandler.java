@@ -1,5 +1,6 @@
 package etherested.spoilage.client;
 
+//? if neoforge {
 import etherested.spoilage.Spoilage;
 import etherested.spoilage.config.SpoilageConfig;
 import net.minecraft.core.BlockPos;
@@ -10,11 +11,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.BonemealEvent;
 
-/**
- * client-side handler for blocking bone meal on rotten crops;
- * mirrors the server-side logic using the client spoilage cache
- * to prevent hand swing and particles when bone meal is blocked
- */
+// client-side handler for blocking bone meal on rotten crops;
+// mirrors the server-side logic using the client spoilage cache
+// to prevent hand swing and particles when bone meal is blocked
 @EventBusSubscriber(modid = Spoilage.MODID, value = Dist.CLIENT)
 public class CropBonemealClientHandler {
 
@@ -47,3 +46,12 @@ public class CropBonemealClientHandler {
         }
     }
 }
+//?} else {
+
+/*// Fabric stub -- client bonemeal blocking is handled by BoneMealItemMixin
+public class CropBonemealClientHandler {
+    public static void registerFabricEvents() {
+        // handled by BoneMealItemMixin on Fabric
+    }
+}
+*///?}

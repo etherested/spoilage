@@ -14,10 +14,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to auto-combine food items with same food in offhand;
- * uses weighted spoilage average when combining
- */
+// mixin to auto-combine food items with same food in offhand;
+// uses weighted spoilage average when combining
 @Mixin(Inventory.class)
 public abstract class InventoryMixin {
 
@@ -27,7 +25,7 @@ public abstract class InventoryMixin {
 
     @Shadow public abstract void setItem(int slot, ItemStack stack);
 
-    /** intercepts item pickup to potentially merge with offhand */
+    // intercepts item pickup to potentially merge with offhand
     @Inject(method = "add(Lnet/minecraft/world/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true)
     private void spoilage$autoMergeOffhand(ItemStack incoming, CallbackInfoReturnable<Boolean> cir) {
         if (!SpoilageConfig.isEnabled() || !SpoilageConfig.isOffhandAutoCombineEnabled()) {
@@ -87,7 +85,7 @@ public abstract class InventoryMixin {
 
         // update offhand stack
         offhand.setCount(currentSize + toMerge);
-        offhand.set(ModDataComponents.SPOILAGE_DATA.get(), mergedData);
+        offhand.set(ModDataComponents.spoilageData(), mergedData);
 
         // update incoming stack
         if (toMerge >= incomingSize) {
@@ -101,7 +99,7 @@ public abstract class InventoryMixin {
         }
     }
 
-    /** calculates merged spoilage data using weighted average */
+    // calculates merged spoilage data using weighted average
     private SpoilageData calculateMergedSpoilage(ItemStack existing, ItemStack incoming, int incomingCount, long worldTime) {
         float existingSpoilage = SpoilageCalculator.getSpoilagePercent(existing, worldTime);
         float incomingSpoilage = SpoilageCalculator.getSpoilagePercent(incoming, worldTime);
@@ -115,7 +113,7 @@ public abstract class InventoryMixin {
         long elapsed = (long) (lifetime * weightedSpoilage);
         long adjustedCreation = worldTime - elapsed;
 
-        SpoilageData existingData = existing.get(ModDataComponents.SPOILAGE_DATA.get());
+        SpoilageData existingData = existing.get(ModDataComponents.spoilageData());
         float preservationMult = existingData != null ? existingData.preservationMultiplier() : 1.0f;
 
         return new SpoilageData(adjustedCreation, SpoilageData.NOT_PAUSED, false, preservationMult, 0L, 0L, 1.0f, 1.0f);

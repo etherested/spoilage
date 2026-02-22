@@ -10,15 +10,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to make villagers ignore spoiled food;
- * villagers will not pick up STALE or worse food
- * and will only accept FRESH (80-100%) items in trades
- */
+// mixin to make villagers ignore spoiled food;
+// villagers will not pick up STALE or worse food
+// and will only accept FRESH (80-100%) items in trades
 @Mixin(Villager.class)
 public abstract class VillagerMixin {
 
-    /** prevents villagers from wanting to pick up spoiled items */
+    // prevents villagers from wanting to pick up spoiled items
     @Inject(method = "wantsToPickUp", at = @At("HEAD"), cancellable = true)
     private void spoilage$rejectSpoiledItems(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (!SpoilageConfig.isEnabled() || !SpoilageConfig.doVillagersIgnoreSpoiled()) {

@@ -16,14 +16,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-/** mixin to handle spoilage initialization on item tooltip display */
+// mixin to handle spoilage initialization on item tooltip display
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
 
-    /**
-     * initialize spoilage when tooltip is shown,
-     * but NOT for creative inventory items or crafting result preview items
-     */
+    // initialize spoilage when tooltip is shown,
+    // but NOT for creative inventory items or crafting result preview items
     @Inject(method = "getTooltipLines", at = @At("HEAD"))
     private void spoilage$onGetTooltipLines(Item.TooltipContext context, Player player, TooltipFlag flag, CallbackInfoReturnable<List<Component>> cir) {
         ItemStack self = (ItemStack) (Object) this;
@@ -53,10 +51,8 @@ public abstract class ItemStackMixin {
         }
     }
 
-    /**
-     * check if the item stack is from the creative inventory (not player's actual inventory);
-     * creative inventory items don't have spoilage data and are just templates
-     */
+    // check if the item stack is from the creative inventory (not player's actual inventory);
+    // creative inventory items don't have spoilage data and are just templates
     private boolean isCreativeOrPreviewItem(ItemStack stack, Player player) {
         // If the item already has spoilage data, it's from the player's inventory
         if (SpoilageCalculator.getInitializedData(stack) != null) {
@@ -75,10 +71,8 @@ public abstract class ItemStackMixin {
         return true;
     }
 
-    /**
-     * check if the item stack is in a result slot (crafting result, furnace output, etc.);
-     * these are preview items that shouldn't have spoilage initialized until taken
-     */
+    // check if the item stack is in a result slot (crafting result, furnace output, etc.);
+    // these are preview items that shouldn't have spoilage initialized until taken
     private boolean isResultSlotPreview(ItemStack stack, Player player) {
         // if the item already has spoilage data, it's not a preview
         if (SpoilageCalculator.getInitializedData(stack) != null) {

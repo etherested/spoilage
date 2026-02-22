@@ -11,14 +11,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to make villagers only accept fresh items in trades;
- * items must be FRESH (80-100% freshness) to be used in merchant trades
- */
+// mixin to make villagers only accept fresh items in trades;
+// items must be FRESH (80-100% freshness) to be used in merchant trades
 @Mixin(MerchantOffer.class)
 public abstract class MerchantOfferMixin {
 
-    /** intercepts trade satisfaction check to reject non-fresh items */
+    // intercepts trade satisfaction check to reject non-fresh items
     @Inject(method = "satisfiedBy", at = @At("HEAD"), cancellable = true)
     private void spoilage$checkFreshness(ItemStack stackA, ItemStack stackB, CallbackInfoReturnable<Boolean> cir) {
         if (!SpoilageConfig.isEnabled() || !SpoilageConfig.doVillagersIgnoreSpoiled()) {

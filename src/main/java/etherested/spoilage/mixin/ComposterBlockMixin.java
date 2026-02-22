@@ -21,10 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to give bonus compost chance for rotten items;
- * fully rotten items are easier to compost
- */
+// mixin to give bonus compost chance for rotten items;
+// fully rotten items are easier to compost
 @Mixin(ComposterBlock.class)
 public class ComposterBlockMixin {
 

@@ -13,10 +13,8 @@ import net.minecraft.world.level.saveddata.SavedData;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * stores spoilage data for blocks in a chunk,
- * used for cakes, placed food, and growing crops
- */
+// stores spoilage data for blocks in a chunk,
+// used for cakes, placed food, and growing crops
 public class ChunkSpoilageData extends SavedData {
 
     private final Map<BlockPos, BlockSpoilageEntry> entries = new HashMap<>();
@@ -97,10 +95,8 @@ public class ChunkSpoilageData extends SavedData {
         return entries;
     }
 
-    /**
-     * entry storing spoilage data for a single block position;
-     * fullyGrownTime is -1 if not fully grown, else world time when reached max age
-     */
+    // entry storing spoilage data for a single block position;
+    // fullyGrownTime is -1 if not fully grown, else world time when reached max age
     public record BlockSpoilageEntry(
             long creationTime,
             float initialSpoilage,
@@ -116,44 +112,38 @@ public class ChunkSpoilageData extends SavedData {
                 Codec.LONG.optionalFieldOf("fully_grown_time", -1L).forGetter(BlockSpoilageEntry::fullyGrownTime)
         ).apply(instance, BlockSpoilageEntry::new));
 
-        /** creates a new entry for a placed block (cake, etc.) */
+        // creates a new entry for a placed block (cake, etc.)
         public static BlockSpoilageEntry create(long worldTime, BlockType type) {
             return new BlockSpoilageEntry(worldTime, 0.0f, false, type, -1L);
         }
 
-        /**
-         * creates a new entry with inherited spoilage that continues to spoil;
-         * used for placed cakes and other blocks where spoilage should continue
-         */
+        // creates a new entry with inherited spoilage that continues to spoil;
+        // used for placed cakes and other blocks where spoilage should continue
         public static BlockSpoilageEntry createWithSpoilage(long worldTime, float initialSpoilage, BlockType type) {
             return new BlockSpoilageEntry(worldTime, initialSpoilage, false, type, -1L);
         }
 
-        /**
-         * creates a new entry for a crop that just became fully grown;
-         * the fresh period timer starts from this moment
-         */
+        // creates a new entry for a crop that just became fully grown;
+        // the fresh period timer starts from this moment
         public static BlockSpoilageEntry createMatureCrop(long worldTime) {
             return new BlockSpoilageEntry(worldTime, 0.0f, false, BlockType.MATURE_CROP, worldTime);
         }
 
-        /**
-         * creates a new entry for tracking a growing crop;
-         * stores seed spoilage which is used if harvested before maturity;
-         * when crop matures it becomes fresh and the stored spoilage is ignored
-         */
+        // creates a new entry for tracking a growing crop;
+        // stores seed spoilage which is used if harvested before maturity;
+        // when crop matures it becomes fresh and the stored spoilage is ignored
         public static BlockSpoilageEntry createGrowingCrop(long worldTime, float seedSpoilage) {
             return new BlockSpoilageEntry(worldTime, seedSpoilage, false, BlockType.CROP, -1L);
         }
 
-        /** calculates current recovering spoilage for a growing crop with seed spoilage */
+        // calculates current recovering spoilage for a growing crop with seed spoilage
         public float getRecoveringSpoilage(long worldTime, long recoveryPeriod) {
             if (initialSpoilage <= 0) return 0.0f;
             long elapsed = worldTime - creationTime;
             return Math.max(0.0f, initialSpoilage - (float) elapsed / recoveryPeriod);
         }
 
-        /** calculates current spoilage percentage based on elapsed time */
+        // calculates current spoilage percentage based on elapsed time
         public float getSpoilage(long worldTime, long lifetime) {
             if (isPaused) {
                 return initialSpoilage;
@@ -164,38 +154,34 @@ public class ChunkSpoilageData extends SavedData {
             return Math.min(1.0f, initialSpoilage + spoilageFromTime);
         }
 
-        /** returns a new entry with paused state changed */
+        // returns a new entry with paused state changed
         public BlockSpoilageEntry withPaused(boolean paused) {
             return new BlockSpoilageEntry(creationTime, initialSpoilage, paused, type, fullyGrownTime);
         }
 
-        /** returns a new entry reset to fresh (for harvested crops) */
+        // returns a new entry reset to fresh (for harvested crops)
         public BlockSpoilageEntry resetToFresh(long worldTime) {
             return new BlockSpoilageEntry(worldTime, 0.0f, false, type, -1L);
         }
 
-        /** returns true if the crop has reached full maturity */
+        // returns true if the crop has reached full maturity
         public boolean isFullyGrown() {
             return fullyGrownTime >= 0;
         }
 
-        /** returns a new entry marked as fully grown at the specified time */
+        // returns a new entry marked as fully grown at the specified time
         public BlockSpoilageEntry markFullyGrown(long worldTime) {
             return new BlockSpoilageEntry(creationTime, 0.0f, false, BlockType.MATURE_CROP, worldTime);
         }
 
-        /**
-         * returns a new entry with fullyGrownTime reset (for bone meal);
-         * keeps the crop as MATURE_CROP but restarts the fresh timer
-         */
+        // returns a new entry with fullyGrownTime reset (for bone meal);
+        // keeps the crop as MATURE_CROP but restarts the fresh timer
         public BlockSpoilageEntry resetFullyGrownTime(long worldTime) {
             return new BlockSpoilageEntry(creationTime, 0.0f, false, BlockType.MATURE_CROP, worldTime);
         }
 
-        /**
-         * calculates the rot progress for a fully grown crop;
-         * returns 0.0 during fresh period, then increases from 0.0 to 1.0 during rot period
-         */
+        // calculates the rot progress for a fully grown crop;
+        // returns 0.0 during fresh period, then increases from 0.0 to 1.0 during rot period
         public float getRotProgress(long worldTime, long freshPeriod, long rotPeriod) {
             if (!isFullyGrown()) {
                 return 0.0f;
@@ -218,7 +204,7 @@ public class ChunkSpoilageData extends SavedData {
         }
     }
 
-    /** type of block being tracked for spoilage */
+    // type of block being tracked for spoilage
     public enum BlockType {
         CAKE,
         CROP,
@@ -227,6 +213,10 @@ public class ChunkSpoilageData extends SavedData {
     }
 
     public static Factory<ChunkSpoilageData> factory() {
+        //? if neoforge {
         return new Factory<>(ChunkSpoilageData::new, ChunkSpoilageData::load);
+        //?} else {
+        /*return new Factory<>(ChunkSpoilageData::new, ChunkSpoilageData::load, null);
+        *///?}
     }
 }

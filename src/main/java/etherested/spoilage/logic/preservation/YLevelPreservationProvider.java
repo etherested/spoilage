@@ -5,10 +5,8 @@ import etherested.spoilage.logic.YLevelPreservation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-/**
- * preservation provider based on Y-level;
- * lower Y = better preservation (slower spoilage)
- */
+// preservation provider based on Y-level;
+// lower Y = better preservation (slower spoilage)
 public class YLevelPreservationProvider implements PreservationProvider {
 
     public static final String ID = "y_level";

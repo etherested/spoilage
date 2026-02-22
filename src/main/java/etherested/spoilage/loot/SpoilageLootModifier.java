@@ -1,5 +1,6 @@
 package etherested.spoilage.loot;
 
+//? if neoforge {
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -12,10 +13,8 @@ import net.neoforged.neoforge.common.loot.IGlobalLootModifier;
 import net.neoforged.neoforge.common.loot.LootModifier;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * global loot modifier that applies random spoilage to all food items in loot tables;
- * respects the lootRandomizationEnabled config option
- */
+// global loot modifier that applies random spoilage to all food items in loot tables;
+// respects the lootRandomizationEnabled config option
 public class SpoilageLootModifier extends LootModifier {
     public static final MapCodec<SpoilageLootModifier> CODEC = RecordCodecBuilder.mapCodec(instance ->
             codecStart(instance).and(instance.group(
@@ -70,3 +69,8 @@ public class SpoilageLootModifier extends LootModifier {
         return CODEC;
     }
 }
+//?} else {
+/*// NeoForge-only: global loot modifier is not used on Fabric
+// (Fabric uses LootTableEvents.MODIFY in ModLootFunctions instead)
+public class SpoilageLootModifier {}
+*///?}

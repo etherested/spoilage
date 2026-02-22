@@ -12,10 +12,8 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 
 import java.util.List;
 
-/**
- * loot function that sets random spoilage on dropped items;
- * use in loot tables to have spawned food start with some spoilage
- */
+// loot function that sets random spoilage on dropped items;
+// use in loot tables to have spawned food start with some spoilage
 public class SetSpoilageLootFunction extends LootItemConditionalFunction {
     public static final MapCodec<SetSpoilageLootFunction> CODEC = RecordCodecBuilder.mapCodec(instance ->
             commonFields(instance).and(instance.group(
@@ -34,7 +32,7 @@ public class SetSpoilageLootFunction extends LootItemConditionalFunction {
 
     @Override
     public LootItemFunctionType<SetSpoilageLootFunction> getType() {
-        return ModLootFunctions.SET_SPOILAGE.get();
+        return ModLootFunctions.setSpoilage();
     }
 
     @Override

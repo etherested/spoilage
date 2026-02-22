@@ -17,23 +17,44 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
+
+//? if neoforge {
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+//?} else {
+/*import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.minecraft.world.item.TooltipFlag;
+*///?}
 
-/**
- * adds spoilage information to item tooltips;
- * each tooltip element can be toggled via config
- */
+import java.util.List;
+
+// adds spoilage information to item tooltips;
+// each tooltip element can be toggled via config
+//? if neoforge {
 @SuppressWarnings("removal")
 @EventBusSubscriber(modid = Spoilage.MODID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+//?}
 public class SpoilageTooltipHandler {
 
+    //? if neoforge {
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
+        handleTooltip(event.getItemStack(), event.getToolTip());
+    }
+    //?} else {
+    /*public static void registerFabricEvents() {
+        ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+            handleTooltip(stack, lines);
+        });
+    }
+    *///?}
+
+    private static void handleTooltip(ItemStack stack, List<Component> tooltip) {
         if (!SpoilageConfig.isEnabled()) {
             return;
         }
@@ -61,7 +82,6 @@ public class SpoilageTooltipHandler {
             return;
         }
 
-        ItemStack stack = event.getItemStack();
         if (!SpoilageCalculator.isSpoilable(stack)) {
             return;
         }
@@ -90,32 +110,30 @@ public class SpoilageTooltipHandler {
         long remainingTicks = calculateRemainingTicksRealtime(stack, data, worldTime);
 
         // add blank line before spoilage info
-        event.getToolTip().add(Component.empty());
+        tooltip.add(Component.empty());
 
         // add freshness line (word and/or percentage based on config)
         if (SpoilageConfig.showFreshnessWord() || SpoilageConfig.showFreshnessPercentage()) {
             Component freshnessLine = buildFreshnessComponent(spoilage);
             if (freshnessLine != null) {
-                event.getToolTip().add(freshnessLine);
+                tooltip.add(freshnessLine);
             }
         }
 
         // add time remaining (expiration) before preservation
         if (SpoilageConfig.showRemainingTime() && remainingTicks > 0 && remainingTicks < Long.MAX_VALUE) {
-            event.getToolTip().add(Component.empty());
+            tooltip.add(Component.empty());
             Component timeLine = getTimeRemainingComponent(remainingTicks);
-            event.getToolTip().add(timeLine);
+            tooltip.add(timeLine);
         }
 
         // add preservation info last, show all active preservation bonuses/penalties
-        addPreservationTooltips(event, data, worldTime);
+        addPreservationTooltips(stack, tooltip, data, worldTime);
     }
 
-    /**
-     * calculates remaining ticks with real-time preservation context;
-     * unlike SpoilageCalculator.getRemainingTicksForDisplay(),
-     * this checks the current container context rather than relying on cached preservation data
-     */
+    // calculates remaining ticks with real-time preservation context;
+    // unlike SpoilageCalculator.getRemainingTicksForDisplay(),
+    // this checks the current container context rather than relying on cached preservation data
     private static long calculateRemainingTicksRealtime(ItemStack stack, SpoilageData data, long worldTime) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) {
@@ -161,16 +179,14 @@ public class SpoilageTooltipHandler {
         return remainingTicks;
     }
 
-    /**
-     * adds preservation bonus/penalty tooltips;
-     * calculates preservation in real-time for items in containers to provide instant tooltip updates
-     */
-    private static void addPreservationTooltips(ItemTooltipEvent event, SpoilageData data, long worldTime) {
+    // adds preservation bonus/penalty tooltips;
+    // calculates preservation in real-time for items in containers to provide instant tooltip updates
+    private static void addPreservationTooltips(ItemStack stack, List<Component> tooltip, SpoilageData data, long worldTime) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
 
         // don't show preservation info for fully spoiled (inedible) items
-        float spoilage = SpoilageCalculator.getSpoilagePercent(event.getItemStack(), worldTime);
+        float spoilage = SpoilageCalculator.getSpoilagePercent(stack, worldTime);
         if (spoilage >= 1.0f) {
             return; // item is inedible, preservation is pointless
         }
@@ -179,7 +195,7 @@ public class SpoilageTooltipHandler {
 
         // check if item is currently in a container (not carried by cursor or in player inventory screen)
         // calculate y-level, biome, and container bonuses in real-time for instant updates
-        if (isItemInOpenContainer(event.getItemStack())) {
+        if (isItemInOpenContainer(stack)) {
             BlockPos containerPos = getOpenContainerPos();
             if (containerPos != null) {
                 // get the block entity for container-specific multipliers
@@ -216,7 +232,7 @@ public class SpoilageTooltipHandler {
         }
 
         // food contamination penalty — applies in both containers and player inventory
-        int rottenSlots = countRottenSlotsInCurrentContext(event.getItemStack());
+        int rottenSlots = countRottenSlotsInCurrentContext(stack);
         float contaminationMultiplier = SpoilageCalculator.getContaminationMultiplier(rottenSlots);
         if (contaminationMultiplier > 1.0f && spoilage < 0.8f) {
             int penaltyPercent = Math.round((contaminationMultiplier - 1.0f) * 100);
@@ -226,17 +242,15 @@ public class SpoilageTooltipHandler {
 
         // add preservation section if there are any effects
         if (!preservationLines.isEmpty()) {
-            event.getToolTip().add(Component.empty());
-            event.getToolTip().add(Component.translatable("tooltip.spoilage.preservation.header")
+            tooltip.add(Component.empty());
+            tooltip.add(Component.translatable("tooltip.spoilage.preservation.header")
                     .withStyle(ChatFormatting.GRAY));
-            preservationLines.forEach(event.getToolTip()::add);
+            preservationLines.forEach(tooltip::add);
         }
     }
 
-    /**
-     * checks if the item being hovered is in an open container's slots;
-     * (not player inventory slots and not being carried by cursor)
-     */
+    // checks if the item being hovered is in an open container's slots;
+    // (not player inventory slots and not being carried by cursor)
     private static boolean isItemInOpenContainer(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.screen == null) return false;
@@ -273,7 +287,7 @@ public class SpoilageTooltipHandler {
         return false;
     }
 
-    /** gets the number of container slots (excluding player inventory) in a menu */
+    // gets the number of container slots (excluding player inventory) in a menu
     private static int getContainerSlotCount(AbstractContainerMenu menu) {
         // player inventory takes 36 slots (27 main + 9 hotbar),
         // container slots = total slots - 36
@@ -282,10 +296,8 @@ public class SpoilageTooltipHandler {
         return Math.max(0, totalSlots - playerSlots);
     }
 
-    /**
-     * gets the position of the currently open container, if available;
-     * works for common container types that store block entity position
-     */
+    // gets the position of the currently open container, if available;
+    // works for common container types that store block entity position
     private static BlockPos getOpenContainerPos() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen == null || mc.level == null) return null;
@@ -320,11 +332,9 @@ public class SpoilageTooltipHandler {
         return null;
     }
 
-    /**
-     * counts rotten slots in the current screen context;
-     * for container screens: counts from container slots;
-     * for inventory screen or items in player inventory: counts from player inventory
-     */
+    // counts rotten slots in the current screen context;
+    // for container screens: counts from container slots;
+    // for inventory screen or items in player inventory: counts from player inventory
     private static int countRottenSlotsInCurrentContext(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return 0;
@@ -355,10 +365,8 @@ public class SpoilageTooltipHandler {
         return SpoilageCalculator.countRottenSlots(mc.player.getInventory(), worldTime);
     }
 
-    /**
-     * builds the freshness component based on config settings;
-     * can show: word only, percentage only, or both
-     */
+    // builds the freshness component based on config settings;
+    // can show: word only, percentage only, or both
     private static Component buildFreshnessComponent(float spoilage) {
         int freshPercent = Math.round((1.0f - spoilage) * 100);
         freshPercent = Math.max(0, Math.min(100, freshPercent));
@@ -435,10 +443,8 @@ public class SpoilageTooltipHandler {
                 .append(Component.literal(timeStr).withStyle(ChatFormatting.DARK_GRAY));
     }
 
-    /**
-     * detects if a recipe viewer mod (EMI/JEI/REI) has a hovered stack in its sidebar;
-     * uses reflection to avoid hard dependencies on these optional mods
-     */
+    // detects if a recipe viewer mod (EMI/JEI/REI) has a hovered stack in its sidebar;
+    // uses reflection to avoid hard dependencies on these optional mods
     private static boolean isRecipeViewerStackHovered() {
         // try EMI first
         if (isEmiStackHovered()) {
@@ -458,10 +464,8 @@ public class SpoilageTooltipHandler {
         return false;
     }
 
-    /**
-     * EMI: check dev.emi.emi.api.EmiApi.getHoveredStack(),
-     * returns EmiStackInteraction, check if getStack() is not empty
-     */
+    // EMI: check dev.emi.emi.api.EmiApi.getHoveredStack(),
+    // returns EmiStackInteraction, check if getStack() is not empty
     private static boolean isEmiStackHovered() {
         try {
             Class<?> emiApiClass = Class.forName("dev.emi.emi.api.EmiApi");
@@ -488,10 +492,8 @@ public class SpoilageTooltipHandler {
         return false;
     }
 
-    /**
-     * REI: check me.shedaniel.rei.api.client.REIRuntime.getInstance().getOverlay(),
-     * then check if mouse is in zone using isInZone(mouseX, mouseY)
-     */
+    // REI: check me.shedaniel.rei.api.client.REIRuntime.getInstance().getOverlay(),
+    // then check if mouse is in zone using isInZone(mouseX, mouseY)
     private static boolean isReiStackHovered() {
         try {
             Class<?> reiRuntimeClass = Class.forName("me.shedaniel.rei.api.client.REIRuntime");
@@ -559,7 +561,7 @@ public class SpoilageTooltipHandler {
         return false;
     }
 
-    /** JEI: check mezz.jei.api.runtime.IJeiRuntime for ingredient under mouse */
+    // JEI: check mezz.jei.api.runtime.IJeiRuntime for ingredient under mouse
     private static boolean isJeiStackHovered() {
         try {
             // JEI stores runtime in Internal class

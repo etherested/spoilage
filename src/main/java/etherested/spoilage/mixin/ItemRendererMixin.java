@@ -26,15 +26,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-/**
- * mixin to apply spoilage visual effects during item rendering;
- * rendering modes (in priority order):
- *   1. texture blending: items with spoilage textures use layered rendering
- *     - base texture (always full opacity)
- *     - stale texture (blends in from stale_start to stale_full)
- *     - rotten texture (blends in from rotten_start to rotten_full)
- *   2. tint system: other spoilable items use color tinting
- */
+// mixin to apply spoilage visual effects during item rendering;
+// rendering modes (in priority order):
+// 1. texture blending: items with spoilage textures use layered rendering
+//  - base texture (always full opacity)
+//  - stale texture (blends in from stale_start to stale_full)
+//  - rotten texture (blends in from rotten_start to rotten_full)
+// 2. tint system: other spoilable items use color tinting
 @Mixin(ItemRenderer.class)
 public class ItemRendererMixin {
 
@@ -58,6 +56,7 @@ public class ItemRendererMixin {
         spoilage$currentStack.remove();
     }
 
+    //? if neoforge {
     @Redirect(
             method = "renderQuadList",
             at = @At(
@@ -68,25 +67,40 @@ public class ItemRendererMixin {
     private void spoilage$redirectPutBulkData(VertexConsumer vertexConsumer, PoseStack.Pose pose,
                                                BakedQuad quad, float red, float green, float blue,
                                                float alpha, int light, int overlay, boolean readExistingColor) {
-        ItemStack stack = spoilage$currentStack.get();
+        float[] rgb = spoilage$applyTint(red, green, blue);
+        vertexConsumer.putBulkData(pose, quad, rgb[0], rgb[1], rgb[2], alpha, light, overlay, readExistingColor);
+    }
+    //?} else {
+    /*@Redirect(
+            method = "renderQuadList",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/mojang/blaze3d/vertex/VertexConsumer;putBulkData(Lcom/mojang/blaze3d/vertex/PoseStack$Pose;Lnet/minecraft/client/renderer/block/model/BakedQuad;FFFFII)V"
+            )
+    )
+    private void spoilage$redirectPutBulkData(VertexConsumer vertexConsumer, PoseStack.Pose pose,
+                                               BakedQuad quad, float red, float green, float blue,
+                                               float alpha, int light, int overlay) {
+        float[] rgb = spoilage$applyTint(red, green, blue);
+        vertexConsumer.putBulkData(pose, quad, rgb[0], rgb[1], rgb[2], alpha, light, overlay);
+    }
+    *///?}
 
+    @Unique
+    private float[] spoilage$applyTint(float red, float green, float blue) {
+        ItemStack stack = spoilage$currentStack.get();
         if (!spoilage$customRendering.get() && stack != null && !stack.isEmpty()) {
             int tintColor = SpoilageTintHelper.getSpoilageTint(stack);
             if (tintColor != SpoilageTintHelper.NO_TINT) {
-                float tintR = ((tintColor >> 16) & 0xFF) / 255f;
-                float tintG = ((tintColor >> 8) & 0xFF) / 255f;
-                float tintB = (tintColor & 0xFF) / 255f;
-
-                red *= tintR;
-                green *= tintG;
-                blue *= tintB;
+                red *= ((tintColor >> 16) & 0xFF) / 255f;
+                green *= ((tintColor >> 8) & 0xFF) / 255f;
+                blue *= (tintColor & 0xFF) / 255f;
             }
         }
-
-        vertexConsumer.putBulkData(pose, quad, red, green, blue, alpha, light, overlay, readExistingColor);
+        return new float[]{red, green, blue};
     }
 
-    /** intercept render method to handle multi-stage texture blending */
+    // intercept render method to handle multi-stage texture blending
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void spoilage$handleTextureBlending(ItemStack stack, ItemDisplayContext displayContext,
                                                  boolean leftHand, PoseStack poseStack,
@@ -144,10 +158,8 @@ public class ItemRendererMixin {
         }
     }
 
-    /**
-     * renders base texture at full opacity, then stale and rotten textures layered on top;
-     * each layer blends in based on its threshold range
-     */
+    // renders base texture at full opacity, then stale and rotten textures layered on top;
+    // each layer blends in based on its threshold range
     @Unique
     private void spoilage$renderLayeredTextures(PoseStack poseStack, MultiBufferSource bufferSource,
                                                  int light, int overlay, BakedModel baseModel,
@@ -206,20 +218,33 @@ public class ItemRendererMixin {
                                                 float alpha, RandomSource random) {
         poseStack.pushPose();
 
+        //? if neoforge {
         BakedModel transformedModel = model.applyTransform(displayContext, poseStack, leftHand);
+        //?} else {
+        /*model.getTransforms().getTransform(displayContext).apply(leftHand, poseStack);
+        BakedModel transformedModel = model;
+        *///?}
         poseStack.translate(-0.5F, -0.5F, -0.5F);
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(SpoilageRenderTypes.SPOILAGE_TEXTURE_BLEND);
 
         List<BakedQuad> quads = transformedModel.getQuads(null, null, random);
         for (BakedQuad quad : quads) {
+            //? if neoforge {
             vertexConsumer.putBulkData(poseStack.last(), quad, 1.0f, 1.0f, 1.0f, alpha, light, overlay, true);
+            //?} else {
+            /*vertexConsumer.putBulkData(poseStack.last(), quad, 1.0f, 1.0f, 1.0f, alpha, light, overlay);
+            *///?}
         }
 
         for (Direction direction : Direction.values()) {
             List<BakedQuad> sidedQuads = transformedModel.getQuads(null, direction, random);
             for (BakedQuad quad : sidedQuads) {
+                //? if neoforge {
                 vertexConsumer.putBulkData(poseStack.last(), quad, 1.0f, 1.0f, 1.0f, alpha, light, overlay, true);
+                //?} else {
+                /*vertexConsumer.putBulkData(poseStack.last(), quad, 1.0f, 1.0f, 1.0f, alpha, light, overlay);
+                *///?}
             }
         }
 

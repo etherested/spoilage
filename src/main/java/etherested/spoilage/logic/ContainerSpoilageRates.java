@@ -12,10 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * manages per-container spoilage rate multipliers;
- * parses config format "namespace:container;multiplier" and provides lookup
- */
+// manages per-container spoilage rate multipliers;
+// parses config format "namespace:container;multiplier" and provides lookup
 public class ContainerSpoilageRates {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerSpoilageRates.class);
@@ -24,10 +22,8 @@ public class ContainerSpoilageRates {
     private static long lastConfigCheck = 0;
     private static final long CONFIG_CHECK_INTERVAL = 100; // Check every 100 ticks
 
-    /**
-     * initializes or refreshes the container rates from config;
-     * call this periodically or when config might have changed
-     */
+    // initializes or refreshes the container rates from config;
+    // call this periodically or when config might have changed
     public static void refresh() {
         containerRates.clear();
 
@@ -40,7 +36,7 @@ public class ContainerSpoilageRates {
         LOGGER.debug("Loaded {} container spoilage rates", containerRates.size());
     }
 
-    /** parses a single config entry in format "namespace:container;multiplier" */
+    // parses a single config entry in format "namespace:container;multiplier"
     private static void parseEntry(String entry) {
         if (entry == null || entry.isEmpty()) {
             return;
@@ -76,12 +72,10 @@ public class ContainerSpoilageRates {
         }
     }
 
-    /**
-     * gets the spoilage rate multiplier for a container at the given position;
-     * returns 1.0 if no specific rate is configured
-     * @param blockEntity the block entity to check
-     * @return the spoilage multiplier (lower = slower spoilage)
-     */
+    // gets the spoilage rate multiplier for a container at the given position;
+    // returns 1.0 if no specific rate is configured
+    // @param blockEntity the block entity to check
+    // @return the spoilage multiplier (lower = slower spoilage)
     public static float getMultiplier(BlockEntity blockEntity) {
         if (blockEntity == null) {
             return 1.0f;
@@ -95,12 +89,10 @@ public class ContainerSpoilageRates {
         return containerRates.getOrDefault(blockId, 1.0f);
     }
 
-    /**
-     * gets the spoilage rate multiplier for a block by its ID;
-     * returns 1.0 if no specific rate is configured
-     * @param blockId the block's resource location
-     * @return the spoilage multiplier (lower = slower spoilage)
-     */
+    // gets the spoilage rate multiplier for a block by its ID;
+    // returns 1.0 if no specific rate is configured
+    // @param blockId the block's resource location
+    // @return the spoilage multiplier (lower = slower spoilage)
     public static float getMultiplier(ResourceLocation blockId) {
         if (blockId == null) {
             return 1.0f;
@@ -111,7 +103,7 @@ public class ContainerSpoilageRates {
         return containerRates.getOrDefault(blockId, 1.0f);
     }
 
-    /** checks if a container has a custom spoilage rate defined */
+    // checks if a container has a custom spoilage rate defined
     public static boolean hasCustomRate(BlockEntity blockEntity) {
         if (blockEntity == null) {
             return false;
@@ -125,14 +117,14 @@ public class ContainerSpoilageRates {
         return containerRates.containsKey(blockId);
     }
 
-    /** ensures the rates are initialized, refreshing from config if needed */
+    // ensures the rates are initialized, refreshing from config if needed
     private static void ensureInitialized() {
         if (!initialized) {
             refresh();
         }
     }
 
-    /** checks and potentially refreshes config (call periodically from tick handlers) */
+    // checks and potentially refreshes config (call periodically from tick handlers)
     public static void checkForConfigRefresh(long worldTime) {
         if (worldTime - lastConfigCheck > CONFIG_CHECK_INTERVAL) {
             lastConfigCheck = worldTime;
@@ -141,7 +133,7 @@ public class ContainerSpoilageRates {
         }
     }
 
-    /** clears the cache and marks as uninitialized */
+    // clears the cache and marks as uninitialized
     public static void invalidate() {
         containerRates.clear();
         initialized = false;

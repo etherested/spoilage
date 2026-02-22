@@ -13,13 +13,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** mixin to apply spoilage transfer when taking crafted items */
+// mixin to apply spoilage transfer when taking crafted items
 @Mixin(ResultSlot.class)
 public abstract class ResultSlotOnTakeMixin {
 
     @Shadow @Final private CraftingContainer craftSlots;
 
-    /** apply spoilage to the crafted result when it's taken */
+    // apply spoilage to the crafted result when it's taken
     @Inject(method = "onTake", at = @At("HEAD"))
     private void spoilage$applySpoilageOnTake(Player player, ItemStack stack, CallbackInfo ci) {
         if (!SpoilageConfig.isEnabled()) {

@@ -13,10 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * mixin to transfer spoilage when smelting food items;
- * when raw spoiled food is cooked, the result inherits the spoilage level
- */
+// mixin to transfer spoilage when smelting food items;
+// when raw spoiled food is cooked, the result inherits the spoilage level
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class AbstractFurnaceBlockEntityMixin {
 
@@ -29,10 +27,8 @@ public abstract class AbstractFurnaceBlockEntityMixin {
     @Unique
     private int spoilage$previousOutputCount = 0;
 
-    /**
-     * before server tick, capture input spoilage if smelting is about to complete;
-     * the items array is: 0 = input, 1 = fuel, 2 = output
-     */
+    // before server tick, capture input spoilage if smelting is about to complete;
+    // the items array is: 0 = input, 1 = fuel, 2 = output
     @Inject(method = "serverTick", at = @At("HEAD"))
     private static void spoilage$beforeTick(Level level, net.minecraft.core.BlockPos pos,
                                              net.minecraft.world.level.block.state.BlockState state,
@@ -59,7 +55,7 @@ public abstract class AbstractFurnaceBlockEntityMixin {
         }
     }
 
-    /** after server tick, apply spoilage to new output if an item was smelted */
+    // after server tick, apply spoilage to new output if an item was smelted
     @Inject(method = "serverTick", at = @At("RETURN"))
     private static void spoilage$afterTick(Level level, net.minecraft.core.BlockPos pos,
                                             net.minecraft.world.level.block.state.BlockState state,

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import org.slf4j.LoggerFactory;
 import com.mojang.serialization.JsonOps;
+import etherested.spoilage.Spoilage;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -15,11 +16,13 @@ import org.slf4j.Logger;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * registry for spoilage groups loaded from datapacks;
- * groups are loaded from: data/<namespace>/spoilage/groups/<name>.json
- */
-public class SpoilageGroupRegistry extends SimpleJsonResourceReloadListener {
+// registry for spoilage groups loaded from datapacks;
+// groups are loaded from: data/<namespace>/spoilage/groups/<name>.json
+public class SpoilageGroupRegistry extends SimpleJsonResourceReloadListener
+    //? if fabric {
+    /*implements net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener
+    *///?}
+{
     private static final Logger LOGGER = LoggerFactory.getLogger(SpoilageGroupRegistry.class);
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String DIRECTORY = "spoilage/groups";
@@ -29,6 +32,13 @@ public class SpoilageGroupRegistry extends SimpleJsonResourceReloadListener {
     public SpoilageGroupRegistry() {
         super(GSON, DIRECTORY);
     }
+
+    //? if fabric {
+    /*@Override
+    public ResourceLocation getFabricId() {
+        return ResourceLocation.fromNamespaceAndPath(Spoilage.MODID, "spoilage_groups");
+    }
+    *///?}
 
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> resources, ResourceManager resourceManager, ProfilerFiller profiler) {

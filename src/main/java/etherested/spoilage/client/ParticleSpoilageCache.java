@@ -7,7 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-/** cache for spoilage info to avoid repeated calculations when many particles spawn */
+// cache for spoilage info to avoid repeated calculations when many particles spawn
 public class ParticleSpoilageCache {
 
     private static final Map<ItemStack, CachedInfo> cache = new WeakHashMap<>();

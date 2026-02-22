@@ -4,12 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * represents a texture stage for spoilage visualization;
- * items can define multiple stages that activate at different spoilage thresholds
- * @param threshold spoilage percentage (0.0-1.0) at which this texture activates
- * @param texture ResourceLocation of the texture to use
- */
+// represents a texture stage for spoilage visualization;
+// items can define multiple stages that activate at different spoilage thresholds
+// @param threshold spoilage percentage (0.0-1.0) at which this texture activates
+// @param texture ResourceLocation of the texture to use
 public record TextureStage(
         float threshold,
         ResourceLocation texture

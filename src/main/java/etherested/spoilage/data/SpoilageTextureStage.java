@@ -9,14 +9,12 @@ import net.minecraft.world.level.block.state.properties.Property;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * data structure for a spoilage texture stage that blends in over a threshold range;
- * used for both stale and rotten texture transitions
- * @param model resourceLocation of the model (e.g., "spoilage:item/potato_stale")
- * @param startThreshold spoilage percentage when blending begins
- * @param fullThreshold spoilage percentage when texture is fully visible
- * @param modelByState optional map of block state keys to models for state-aware rendering
- */
+// data structure for a spoilage texture stage that blends in over a threshold range;
+// used for both stale and rotten texture transitions
+// @param model resourceLocation of the model (e.g., "spoilage:item/potato_stale")
+// @param startThreshold spoilage percentage when blending begins
+// @param fullThreshold spoilage percentage when texture is fully visible
+// @param modelByState optional map of block state keys to models for state-aware rendering
 public record SpoilageTextureStage(
         ResourceLocation model,
         float startThreshold,
@@ -34,11 +32,9 @@ public record SpoilageTextureStage(
             Codec.unboundedMap(Codec.STRING, ResourceLocation.CODEC).optionalFieldOf("model_by_state").forGetter(SpoilageTextureStage::modelByState)
     ).apply(instance, SpoilageTextureStage::new));
 
-    /**
-     * calculates the blend factor for this texture stage
-     * @param spoilage Current spoilage percentage (0.0-1.0)
-     * @return Blend factor (0.0 = not visible, 1.0 = fully visible)
-     */
+    // calculates the blend factor for this texture stage
+    // @param spoilage Current spoilage percentage (0.0-1.0)
+    // @return Blend factor (0.0 = not visible, 1.0 = fully visible)
     public float calculateBlendFactor(float spoilage) {
         if (spoilage <= startThreshold) {
             return 0.0f;
@@ -49,13 +45,11 @@ public record SpoilageTextureStage(
         return (spoilage - startThreshold) / (fullThreshold - startThreshold);
     }
 
-    /**
-     * gets the model location for a specific block state;
-     * if modelByState is defined and contains a matching key, returns that model;
-     * otherwise returns the default model
-     * @param state The block state to get model for
-     * @return The model location for this state
-     */
+    // gets the model location for a specific block state;
+    // if modelByState is defined and contains a matching key, returns that model;
+    // otherwise returns the default model
+    // @param state The block state to get model for
+    // @return The model location for this state
     public ResourceLocation getModelForState(BlockState state) {
         if (modelByState.isEmpty()) {
             return model;
@@ -74,7 +68,7 @@ public record SpoilageTextureStage(
         return model;
     }
 
-    /** checks if this texture stage has state-aware models defined */
+    // checks if this texture stage has state-aware models defined
     public boolean hasStateAwareModels() {
         return modelByState.isPresent() && !modelByState.get().isEmpty();
     }

@@ -30,7 +30,7 @@ public class EatInedibleTrigger extends SimpleCriterionTrigger<EatInedibleTrigge
         );
 
         public static Criterion<TriggerInstance> eatInedible() {
-            return ModTriggers.EAT_INEDIBLE.get().createCriterion(new TriggerInstance(Optional.empty()));
+            return ModTriggers.eatInedible().createCriterion(new TriggerInstance(Optional.empty()));
         }
 
         @Override

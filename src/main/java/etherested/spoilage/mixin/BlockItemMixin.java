@@ -24,25 +24,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to prevent planting spoiled seeds and crops,
- * and to track seed spoilage when planting
- */
+// mixin to prevent planting spoiled seeds and crops,
+// and to track seed spoilage when planting
 @Mixin(BlockItem.class)
 public abstract class BlockItemMixin {
 
     @Shadow
     public abstract Block getBlock();
 
-    /**
-     * ThreadLocal to store seed spoilage between HEAD and RETURN injections;
-     * needed because the stack becomes empty after placement,
-     * so we can't read spoilage in the RETURN injection
-     */
+    // ThreadLocal to store seed spoilage between HEAD and RETURN injections;
+    // needed because the stack becomes empty after placement,
+    // so we can't read spoilage in the RETURN injection
     @Unique
     private static final ThreadLocal<Float> spoilage$capturedSeedSpoilage = ThreadLocal.withInitial(() -> -1.0f);
 
-    /** prevents planting spoiled items and captures seed spoilage for later use */
+    // prevents planting spoiled items and captures seed spoilage for later use
     @Inject(method = "useOn", at = @At("HEAD"), cancellable = true)
     private void spoilage$preventSpoiledPlanting(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         // reset captured spoilage at the start of each useOn call
@@ -104,10 +100,8 @@ public abstract class BlockItemMixin {
         }
     }
 
-    /**
-     * stores seed spoilage when planting;
-     * seed spoilage is used for immature harvest, reset to fresh at maturity
-     */
+    // stores seed spoilage when planting;
+    // seed spoilage is used for immature harvest, reset to fresh at maturity
     @Inject(method = "useOn", at = @At("RETURN"))
     private void spoilage$storeSeedSpoilage(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         if (!SpoilageConfig.isEnabled()) {

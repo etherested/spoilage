@@ -1,0 +1,97 @@
+apply plugin: 'net.neoforged.moddev'
+
+def modId = project.property('modId')
+def modVersion = project.property('modVersion')
+def modName = project.property('modName')
+def modLicense = project.property('modLicense')
+def modAuthors = project.property('modAuthors')
+def modDescription = project.property('modDescription')
+def minecraftVersion = project.property('minecraftVersion')
+def minecraftVersionRange = project.property('minecraftVersionRange')
+def neoVersion = project.property('neoVersion')
+def neoVersionRange = project.property('neoVersionRange')
+def loaderVersionRange = project.property('loaderVersionRange')
+def parchmentMinecraftVersion = project.property('parchmentMinecraftVersion')
+def parchmentMappingsVersion = project.property('parchmentMappingsVersion')
+def clothConfigVersion = project.property('clothConfigVersion')
+
+dependencies {
+    compileOnly "me.shedaniel.cloth:cloth-config-neoforge:${clothConfigVersion}"
+}
+
+neoForge {
+    version = neoVersion
+
+    parchment {
+        mappingsVersion = parchmentMappingsVersion
+        it.minecraftVersion = parchmentMinecraftVersion
+    }
+
+    runs {
+        register('client') {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', modId
+        }
+
+        register('server') {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', modId
+        }
+
+        register('gameTestServer') {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', modId
+        }
+
+        register('data') {
+            data()
+            programArguments.addAll(
+                '--mod', modId,
+                '--all',
+                '--output', file('src/generated/resources/').absolutePath,
+                '--existing', file('src/main/resources/').absolutePath
+            )
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        register(modId) {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+def generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
+    def replaceProperties = [
+        'minecraft_version'      : minecraftVersion,
+        'minecraft_version_range': minecraftVersionRange,
+        'neo_version'            : neoVersion,
+        'neo_version_range'      : neoVersionRange,
+        'loader_version_range'   : loaderVersionRange,
+        'mod_id'                 : modId,
+        'mod_name'               : modName,
+        'mod_license'            : modLicense,
+        'mod_version'            : modVersion,
+        'mod_authors'            : modAuthors,
+        'mod_description'        : modDescription
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from rootProject.file('src/main/templates')
+    into layout.buildDirectory.dir('generated/sources/modMetadata')
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+// exclude Fabric-only files from NeoForge build
+tasks.named('processResources') {
+    exclude 'fabric.mod.json'
+    exclude 'spoilage-fabric.mixins.json'
+}

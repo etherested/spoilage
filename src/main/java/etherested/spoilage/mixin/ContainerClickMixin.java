@@ -60,13 +60,13 @@ public abstract class ContainerClickMixin {
         if (totalCount <= maxStack) {
             // full merge
             slotStack.setCount(totalCount);
-            slotStack.set(ModDataComponents.SPOILAGE_DATA.get(), merged);
+            slotStack.set(ModDataComponents.spoilageData(), merged);
             setCarried(ItemStack.EMPTY);
         } else {
             // partial merge - only the items that actually combine get merged spoilage
             // the slot gets merged spoilage for all items that end up there
             slotStack.setCount(maxStack);
-            slotStack.set(ModDataComponents.SPOILAGE_DATA.get(), merged);
+            slotStack.set(ModDataComponents.spoilageData(), merged);
 
             // the carried items that DON'T merge keep their original spoilage
             carried.setCount(totalCount - maxStack);

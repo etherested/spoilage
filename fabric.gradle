@@ -1,0 +1,47 @@
+apply plugin: 'fabric-loom'
+
+def modId = project.property('modId')
+def modVersion = project.property('modVersion')
+def modDescription = project.property('modDescription')
+def minecraftVersion = project.property('minecraftVersion')
+def parchmentMinecraftVersion = project.property('parchmentMinecraftVersion')
+def parchmentMappingsVersion = project.property('parchmentMappingsVersion')
+def fabricLoaderVersion = project.property('fabricLoaderVersion')
+def fabricApiVersion = project.property('fabricApiVersion')
+def clothConfigVersion = project.property('clothConfigVersion')
+def modMenuVersion = project.property('modMenuVersion')
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersion}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment "org.parchmentmc.data:parchment-${parchmentMinecraftVersion}:${parchmentMappingsVersion}@zip"
+    }
+    modImplementation "net.fabricmc:fabric-loader:${fabricLoaderVersion}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
+    modCompileOnly "me.shedaniel.cloth:cloth-config-fabric:${clothConfigVersion}"
+    modCompileOnly "com.terraformersmc:modmenu:${modMenuVersion}"
+}
+
+loom {
+    runs {
+        client {
+            ideConfigGenerated true
+            programArgs '--username', 'Dev'
+        }
+        server {
+            ideConfigGenerated true
+        }
+    }
+}
+
+processResources {
+    def replaceProperties = [
+        'version'    : modVersion,
+        'description': modDescription
+    ]
+    inputs.properties replaceProperties
+    filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+}

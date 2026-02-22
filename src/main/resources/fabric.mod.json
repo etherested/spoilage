@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "spoilage",
+  "version": "${version}",
+  "name": "Spoilage",
+  "description": "${description}",
+  "authors": [
+    "etherested"
+  ],
+  "license": "All Rights Reserved",
+  "icon": "assets/spoilage/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "etherested.spoilage.Spoilage"
+    ],
+    "client": [
+      "etherested.spoilage.client.SpoilageFabricClient"
+    ],
+    "modmenu": [
+      "etherested.spoilage.client.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "spoilage.mixins.json",
+    "spoilage-fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "cloth-config": "*"
+  }
+}

@@ -22,29 +22,47 @@ import net.minecraft.world.level.block.CakeBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+
+//? if neoforge {
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+//?} else {
+/*import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+*///?}
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * renders spoilage visual effects on placed blocks;
- * rendering modes (matching item behavior):
- *   1. custom textures available: render stale/rotten model overlays with alpha blending
- *   2. no custom textures: render the block model with tint color applied
- */
+// renders spoilage visual effects on placed blocks;
+// rendering modes (matching item behavior):
+//  1. custom textures available: render stale/rotten model overlays with alpha blending
+//  2. no custom textures: render the block model with tint color applied
+//? if neoforge {
 @EventBusSubscriber(modid = Spoilage.MODID, value = Dist.CLIENT)
+//?}
 public class BlockSpoilageOverlayRenderer {
 
+    //? if neoforge {
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
             return;
         }
 
+        renderSpoilageOverlays(event.getPoseStack(), event.getCamera().getPosition());
+    }
+    //?} else {
+    /*public static void registerFabricEvents() {
+        WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
+            renderSpoilageOverlays(context.matrixStack(), context.camera().getPosition());
+        });
+    }
+    *///?}
+
+    // shared rendering logic for both loaders
+    private static void renderSpoilageOverlays(PoseStack poseStack, Vec3 cameraPos) {
         if (!SpoilageConfig.isEnabled()) {
             return;
         }
@@ -61,8 +79,6 @@ public class BlockSpoilageOverlayRenderer {
             return;
         }
 
-        Vec3 cameraPos = event.getCamera().getPosition();
-        PoseStack poseStack = event.getPoseStack();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
         RandomSource random = level.random;
 
@@ -127,10 +143,8 @@ public class BlockSpoilageOverlayRenderer {
         bufferSource.endBatch(SpoilageRenderTypes.SPOILAGE_BLOCK_OVERLAY);
     }
 
-    /**
-     * renders custom stale/rotten texture overlays
-     * @return true if texture overlays were rendered, false if should fall back to tint
-     */
+    // renders custom stale/rotten texture overlays
+    // @return true if texture overlays were rendered, false if should fall back to tint
     private static boolean renderTextureOverlays(PoseStack poseStack, MultiBufferSource bufferSource,
                                                BlockState state, ResourceLocation blockId,
                                                float spoilage, int light, RandomSource random) {
@@ -180,18 +194,14 @@ public class BlockSpoilageOverlayRenderer {
         return true;
     }
 
-    /**
-     * checks if a block has multiple visual states that affect its model;
-     * for these blocks, texture overlays require state-aware models to look correct
-     */
+    // checks if a block has multiple visual states that affect its model;
+    // for these blocks, texture overlays require state-aware models to look correct
     private static boolean hasMultipleVisualStates(Block block) {
         return block instanceof CakeBlock || block instanceof CropBlock;
     }
 
-    /**
-     * renders a tinted overlay using the block's own model;
-     * this provides the fallback visual for blocks without custom textures
-     */
+    // renders a tinted overlay using the block's own model;
+    // this provides the fallback visual for blocks without custom textures
     private static void renderTintOverlay(PoseStack poseStack, MultiBufferSource bufferSource,
                                            BlockState state, float spoilage, int light,
                                            RandomSource random, Minecraft mc) {
@@ -214,7 +224,7 @@ public class BlockSpoilageOverlayRenderer {
         renderBlockOverlay(poseStack, bufferSource, blockModel, alpha, light, random, state, r, g, b);
     }
 
-    /** renders a single block overlay with the given alpha blend and color */
+    // renders a single block overlay with the given alpha blend and color
     private static void renderBlockOverlay(PoseStack poseStack, MultiBufferSource bufferSource,
                                             BakedModel model, float alpha, int light,
                                             RandomSource random, BlockState state,
@@ -224,14 +234,22 @@ public class BlockSpoilageOverlayRenderer {
         // render all quads from the model
         List<BakedQuad> quads = model.getQuads(state, null, random);
         for (BakedQuad quad : quads) {
+            //? if neoforge {
             vertexConsumer.putBulkData(poseStack.last(), quad, red, green, blue, alpha, light, 0, true);
+            //?} else {
+            /*vertexConsumer.putBulkData(poseStack.last(), quad, red, green, blue, alpha, light, 0);
+            *///?}
         }
 
         // render sided quads
         for (Direction direction : Direction.values()) {
             List<BakedQuad> sidedQuads = model.getQuads(state, direction, random);
             for (BakedQuad quad : sidedQuads) {
+                //? if neoforge {
                 vertexConsumer.putBulkData(poseStack.last(), quad, red, green, blue, alpha, light, 0, true);
+                //?} else {
+                /*vertexConsumer.putBulkData(poseStack.last(), quad, red, green, blue, alpha, light, 0);
+                *///?}
             }
         }
     }

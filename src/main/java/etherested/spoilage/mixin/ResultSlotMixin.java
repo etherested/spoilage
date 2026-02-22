@@ -12,14 +12,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/**
- * mixin to prevent crafting with fully rotten ingredients,
- * we mixin to Slot and check if it's a ResultSlot since mayPickup is defined in Slot
- */
+// mixin to prevent crafting with fully rotten ingredients,
+// we mixin to Slot and check if it's a ResultSlot since mayPickup is defined in Slot
 @Mixin(Slot.class)
 public abstract class ResultSlotMixin {
 
-    /** prevents taking the crafting result if any spoilable ingredient is fully rotten */
+    // prevents taking the crafting result if any spoilable ingredient is fully rotten
     @Inject(method = "mayPickup", at = @At("HEAD"), cancellable = true)
     private void spoilage$preventRottenCraft(Player player, CallbackInfoReturnable<Boolean> cir) {
         // only apply to ResultSlot (crafting results)

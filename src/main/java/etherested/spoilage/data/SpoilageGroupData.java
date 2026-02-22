@@ -3,10 +3,8 @@ package etherested.spoilage.data;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-/**
- * defines a spoilage group with shared settings;
- * loaded from: data/<namespace>/spoilage/groups/<name>.json
- */
+// defines a spoilage group with shared settings;
+// loaded from: data/<namespace>/spoilage/groups/<name>.json
 public record SpoilageGroupData(
         long baseLifetimeTicks,
         boolean showTooltip
@@ -18,7 +16,7 @@ public record SpoilageGroupData(
 
     public static final long DEFAULT_LIFETIME = 48000L; // 40 minutes real time at 20 TPS
 
-    /** constructor for backwards compatibility with existing code that only specifies lifetime */
+    // constructor for backwards compatibility with existing code that only specifies lifetime
     public SpoilageGroupData(long baseLifetimeTicks) {
         this(baseLifetimeTicks, true);
     }

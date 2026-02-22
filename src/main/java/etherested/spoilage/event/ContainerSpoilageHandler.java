@@ -17,15 +17,22 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
+
+//? if neoforge {
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
+//?} else {
+/*import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+*///?}
 
 import java.util.HashSet;
 import java.util.Set;
 
+//? if neoforge {
 @SuppressWarnings("removal")
 @EventBusSubscriber(modid = Spoilage.MODID, bus = EventBusSubscriber.Bus.GAME)
+//?}
 public class ContainerSpoilageHandler {
 
     // track containers processed this tick to prevent duplicate processing
@@ -33,9 +40,23 @@ public class ContainerSpoilageHandler {
     private static final Set<BlockPos> processedThisTick = new HashSet<>();
     private static long lastTickTime = -1;
 
+    //? if neoforge {
     @SubscribeEvent
     public static void onLevelTick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
+        handleLevelTick(level);
+    }
+    //?} else {
+    /*public static void registerFabricEvents() {
+        ServerTickEvents.END_WORLD_TICK.register(level -> {
+            if (level instanceof ServerLevel serverLevel) {
+                handleLevelTick(serverLevel);
+            }
+        });
+    }
+    *///?}
+
+    private static void handleLevelTick(ServerLevel level) {
         if (!SpoilageConfig.isEnabled()) return;
 
         long worldTime = level.getGameTime();
@@ -110,15 +131,13 @@ public class ContainerSpoilageHandler {
         }
     }
 
-    /**
-     * adjusts item's preservation savings to simulate slower spoilage while in container;
-     * uses cumulative savings approach instead of modifying creation time to prevent
-     * rollback issues when multiple players are near the same container;
-     * also stores the current preservation multipliers for smooth tooltip display
-     * @param stack the item stack to adjust
-     * @param info the preservation info containing all multipliers
-     * @param worldTime current world time
-     */
+    // adjusts item's preservation savings to simulate slower spoilage while in container;
+    // uses cumulative savings approach instead of modifying creation time to prevent
+    // rollback issues when multiple players are near the same container;
+    // also stores the current preservation multipliers for smooth tooltip display
+    // @param stack the item stack to adjust
+    // @param info the preservation info containing all multipliers
+    // @param worldTime current world time
     private static void adjustSpoilageForPreservation(ItemStack stack, PreservationManager.PreservationInfo info, long worldTime) {
         SpoilageData data = SpoilageCalculator.getInitializedData(stack);
         if (data == null || data.isPaused()) {
@@ -137,14 +156,14 @@ public class ContainerSpoilageHandler {
         // first time processing - record the tick and multipliers, don't give savings yet
         // this prevents giving savings for time the item wasn't actually in the container
         if (lastProcessTick <= 0) {
-            stack.set(ModDataComponents.SPOILAGE_DATA.get(),
+            stack.set(ModDataComponents.spoilageData(),
                     data.withContainerPreservation(combinedMultiplier, info.biomeMultiplier(), worldTime));
             return;
         }
 
         // if combinedMultiplier is effectively 1.0, no effect in either direction - just update the multipliers for display
         if (Math.abs(combinedMultiplier - 1.0f) < 0.001f) {
-            stack.set(ModDataComponents.SPOILAGE_DATA.get(),
+            stack.set(ModDataComponents.spoilageData(),
                     data.withContainerPreservation(combinedMultiplier, info.biomeMultiplier(), worldTime));
             return;
         }
@@ -165,7 +184,7 @@ public class ContainerSpoilageHandler {
 
         // add savings to cumulative total and update multipliers for display
         SpoilageData updated = data.addYLevelSavings(ticksSaved, worldTime);
-        stack.set(ModDataComponents.SPOILAGE_DATA.get(), new SpoilageData(
+        stack.set(ModDataComponents.spoilageData(), new SpoilageData(
                 updated.creationTime(),
                 updated.remainingLifetime(),
                 updated.isPaused(),

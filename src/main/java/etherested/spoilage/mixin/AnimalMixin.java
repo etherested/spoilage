@@ -15,14 +15,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** mixin to poison animals when fed rotten food */
+// mixin to poison animals when fed rotten food
 @Mixin(Animal.class)
 public abstract class AnimalMixin {
 
-    /**
-     * applies poison effect when animals eat rotten food;
-     * injects after the interaction but checks if feeding occurred
-     */
+    // applies poison effect when animals eat rotten food;
+    // injects after the interaction but checks if feeding occurred
     @Inject(method = "mobInteract", at = @At("RETURN"))
     private void spoilage$checkFoodQuality(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         if (!SpoilageConfig.isEnabled() || !SpoilageConfig.areAnimalsPoisonedByRotten()) {
