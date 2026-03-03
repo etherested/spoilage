@@ -14,9 +14,12 @@ def loaderVersionRange = project.property('loaderVersionRange')
 def parchmentMinecraftVersion = project.property('parchmentMinecraftVersion')
 def parchmentMappingsVersion = project.property('parchmentMappingsVersion')
 def clothConfigVersion = project.property('clothConfigVersion')
+def javaVersion = project.property('javaVersion')
+def packFormat = project.property('packFormat')
 
 dependencies {
     compileOnly "me.shedaniel.cloth:cloth-config-neoforge:${clothConfigVersion}"
+    runtimeOnly "me.shedaniel.cloth:cloth-config-neoforge:${clothConfigVersion}"
 }
 
 neoForge {
@@ -90,8 +93,21 @@ def generateModMetadata = tasks.register('generateModMetadata', ProcessResources
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
 
-// exclude Fabric-only files from NeoForge build
+// exclude Fabric-only files from NeoForge build;
+// expand pack.mcmeta and mixin JSON templates
 tasks.named('processResources') {
     exclude 'fabric.mod.json'
     exclude 'spoilage-fabric.mixins.json'
+
+    def expandProps = [
+        'pack_format': packFormat,
+        'java_version': javaVersion
+    ]
+    inputs.properties expandProps
+    filesMatching('pack.mcmeta') {
+        expand expandProps
+    }
+    filesMatching('*.mixins.json') {
+        expand expandProps
+    }
 }

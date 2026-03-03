@@ -10,6 +10,8 @@ def fabricLoaderVersion = project.property('fabricLoaderVersion')
 def fabricApiVersion = project.property('fabricApiVersion')
 def clothConfigVersion = project.property('clothConfigVersion')
 def modMenuVersion = project.property('modMenuVersion')
+def javaVersion = project.property('javaVersion')
+def packFormat = project.property('packFormat')
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
@@ -20,10 +22,15 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabricLoaderVersion}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}"
     modCompileOnly "me.shedaniel.cloth:cloth-config-fabric:${clothConfigVersion}"
+    modRuntimeOnly "me.shedaniel.cloth:cloth-config-fabric:${clothConfigVersion}"
     modCompileOnly "com.terraformersmc:modmenu:${modMenuVersion}"
+    modRuntimeOnly "com.terraformersmc:modmenu:${modMenuVersion}"
 }
 
 loom {
+    mixin {
+        defaultRefmapName = "${modId}.refmap.json"
+    }
     runs {
         client {
             ideConfigGenerated true
@@ -37,11 +44,21 @@ loom {
 
 processResources {
     def replaceProperties = [
-        'version'    : modVersion,
-        'description': modDescription
+        'version'              : modVersion,
+        'description'          : modDescription,
+        'minecraft_version'    : minecraftVersion,
+        'java_version'         : javaVersion,
+        'fabric_loader_version': fabricLoaderVersion,
+        'pack_format'          : packFormat
     ]
     inputs.properties replaceProperties
     filesMatching('fabric.mod.json') {
+        expand replaceProperties
+    }
+    filesMatching('pack.mcmeta') {
+        expand replaceProperties
+    }
+    filesMatching('*.mixins.json') {
         expand replaceProperties
     }
 }

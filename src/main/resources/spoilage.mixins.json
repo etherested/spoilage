@@ -2,7 +2,8 @@
   "required": true,
   "minVersion": "0.8",
   "package": "etherested.spoilage.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "refmap": "spoilage.refmap.json",
   "mixins": [
     "ItemStackMixin",
     "FoodDataMixin",

@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
     id("dev.kikugie.stonecutter")
     id("net.neoforged.moddev") version "2.0.140" apply false
-    id("fabric-loom") version "1.9-SNAPSHOT" apply false
+    id("fabric-loom") version "1.9.2" apply false
 }
 
 val modId: String by project
@@ -13,7 +13,7 @@ val modGroupId: String by project
 val modAuthors: String by project
 val modDescription: String by project
 val modLicense: String by project
-val minecraftVersion: String by project
+val javaVersion: String by project
 
 val loader = project.name.substringAfterLast('-')
 
@@ -21,7 +21,7 @@ version = modVersion
 group = modGroupId
 base.archivesName.set(modId)
 
-java.toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion.toInt()))
 
 repositories {
     maven("https://maven.parchmentmc.org/")
