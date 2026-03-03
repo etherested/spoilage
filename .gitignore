@@ -16,6 +16,9 @@ run/
 CLAUDE.md
 .claude/
 
+# Misc
+curseforge.html
+
 # Stonecutter
 versions/**/build/
 versions/**/.gradle/

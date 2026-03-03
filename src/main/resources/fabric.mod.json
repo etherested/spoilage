@@ -8,6 +8,11 @@
     "etherested"
   ],
   "license": "All Rights Reserved",
+  "contact": {
+    "homepage": "https://github.com/etherested/spoilage",
+    "issues": "https://github.com/etherested/spoilage/issues",
+    "sources": "https://github.com/etherested/spoilage"
+  },
   "icon": "assets/spoilage/icon.png",
   "environment": "*",
   "entrypoints": {
