@@ -25,6 +25,7 @@
   ],
   "client": [
     "ItemRendererMixin",
+    "ItemInHandRendererMixin",
     "EatingParticleMixin",
     "TerrainParticleMixin"
   ],
